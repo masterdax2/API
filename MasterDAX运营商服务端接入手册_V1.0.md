@@ -100,7 +100,7 @@ private String generateSign(String json, String secretKey) {
 > 接口名： [/v1/user/create-user](#createuserusingpost)
 
 #### 2.2.2 修改白名单用户
-运营商。
+运营商可对某个用户设置白名单，白名单的用户交易手续费为0。
 > 请求方式：POST</br>
 > 接口名： [/v1/user/modify-whitelist](#modifywhitelistusingpost)
 
@@ -139,7 +139,7 @@ private String generateSign(String json, String secretKey) {
 
 #### 2.4.2 获取K线
 支持查询MasterDAX的所有K线数据。
-> 请求方式：POST</br>
+> 请求方式：POST</br>币对
 > 接口名： [/v1/data/kline/kline-pages](getklinepagesusingpost)
 
 
@@ -272,7 +272,7 @@ private String generateSign(String json, String secretKey) {
 > 接口名：  [/v1/withdraw/withdraw-coin-details](#getwithdrawcoinusingpost)
 
 
-### 3.5 交易对分成比例查询
+### 3.5 币对分成比例查询
 用户交易产生的手续费与MasterDAX的分成比例查询。
  
 
@@ -304,7 +304,7 @@ private String generateSign(String json, String secretKey) {
 |**BROKER_ASSET_NOT_EXIST**|运营商没有分配该币种|
 |**BROKER_ASSET_EXIST**|运营商已经分配该币种|
 |**SYMBOL_FORMAT_ERROR**|币对格式错误|
-|**INVALID_SYMBOL**|交易对未生效|
+|**INVALID_SYMBOL**|币对未生效|
 |**ORDER_CREATE_ERROR**|订单创建失败|
 |**ORDER_NOT_EXIST**|订单信息不存在|
 |**ORDER_STATE_ERROR**|订单状态错误|
@@ -349,7 +349,7 @@ GET `/trade/trade?symbol=`symbolCode
 
 |参数名|   参数类型|   必填| 描述|
 | :-----    | :-----   | :-----    | :-----   |
-|symbolCode|String|是|交易对（填充到URL路径中）|
+|symbolCode|String|是|币对（填充到URL路径中）|
 
 
 #### Responses example
@@ -429,7 +429,7 @@ GET /trade/info?symbol=BTC_EOS
 
 |参数名|   参数类型|   必填| 描述|
 | :-----    | :-----   | :-----    | :-----   |
-|symbol|String|是|交易对（填充到URL路径中）|
+|symbol|String|是|币对（填充到URL路径中）|
 
 #### Responses example
 
@@ -1120,7 +1120,7 @@ POST /v1/symbol/save-update-fee
 
 
 <a name="getsharingusingpost"></a>
-### 交易对分成比例查询
+### 币对分成比例查询
 ```
 POST /v1/symbol/sharings
 ```
@@ -2052,7 +2052,7 @@ POST /v1/withdraw/withdraw-coin-user
 |**pageNum**  <br>*required*|页数=1|integer (int32)|
 |**pageSize**  <br>*required*|页面大小|integer (int32)|
 |**startTime**  <br>*required*|开始时间(秒)|integer (int64)|
-|**symbol**  <br>*required*|交易对=tradeAsset_priceAsset|string|
+|**symbol**  <br>*required*|币对=tradeAsset_priceAsset|string|
 
 
 <a name="klinerecord"></a>
@@ -2066,7 +2066,7 @@ POST /v1/withdraw/withdraw-coin-user
 |**lowPrice**  <br>*optional*|结束价|number|
 |**maxPrice**  <br>*optional*|最高价|number|
 |**open**  <br>*optional*|起始价|number|
-|**symbol**  <br>*optional*|交易对|string|
+|**symbol**  <br>*optional*|币对|string|
 |**time**  <br>*optional*|时间|integer (int64)|
 
 
