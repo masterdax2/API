@@ -1,8 +1,8 @@
-#MasterDAX运营商服务端接入手册_V1.0
+# MasterDAX运营商服务端接入手册_V1.0
 --------------------
 MasterDAX做为服务商，给所有运营商的交易所提供交易所用户挂单及撮合，用户资产及充值提现等服务。同时做为交易所的运营商，我们会将您的手续费的盈利T+0结算到账户中，随时可以完成资产转出。
 
-##1.简介
+## 1.简介
 MasterDAX做为交易所云服务提供商，给运营商及运营商的用户提供以下服务：
 
 | 角色 | 提供的服务 | 备注 |
@@ -11,240 +11,284 @@ MasterDAX做为交易所云服务提供商，给运营商及运营商的用户�
 | 运营商 | 用户币币交易产生的手续费、提现手续费T+0结算到运营商账户 | |
 
 
-###1.1 接入准备
-与MasterDAX签订合同后，我们会给您生成唯一标识的券商ID `brokerId` , 同时也会生成对应的 `APIkey` , `APIsercret` 做签名验签使用。请在接入前提供以下信息：</br>
+### 1.1 接入准备
+与MasterDAX签订合同后，我们会给您生成唯一标识的运营商ID `brokerId` , 同时也会生成对应的 `APIkey` , `APIsercretkey` 做签名验签使用。请在接入前提供以下信息：</br>
 
 -  回调地址</br>
 -  绑定的IP，最多支持5个IP
 
-###1.2 交易流程说明
-####1.2.1 运营商用户交易流程
+### 1.2 交易流程说明
+#### 1.2.1 运营商用户交易流程
 按文档提供的接口接入后，可以完成用户在交易所下单，撤单等操作，具体流程如图：
 
+![云交易所接入流程](flow_image_tag.png)
 
-####1.2.2 运营商结算流程
+![用户提现](user_withdraw.jpeg)
+
+#### 1.2.2 运营商结算流程
 运营商用户一旦在交易所产生手续费（交易手续费和提现手续费）时，MasterDAX会根据约定将运营商的手续费收益T+0实时结算至运营商在MasterDAX开立的账户中，运营商可自行通过接口发起转出操作，转出至运营商自己的地址中。具体流程如图：
 
+![运营商提现](broker_withdraw.jpeg)
 
-##2.交易所标准接口
-###2.1 币种及币对配置
->接入前请先查询交易所支持的交易币种和交易币对，只有支持的币种及币对MasterDAX才会提供相关的交易服务。如有疑问可与商务人员沟通。
+### 1.3 请求交互
+#### 1.3.1 URI scheme
+*Host* : ip:8080  
+*BasePath* : /api
 
-####2.1.1 运营商币种列表查询
+#### 1.3.2 请求交互说明
+1. 提交方式
+    
+    将封装好的请求参数转换为`JSON 格式`通过POST方式提交至服务器。
+
+2. 服务器响应
+
+    服务器首先对用户请求数据进行参数安全校验，通过校验后根据业务逻辑将响应数据以`JSON 格式` 响应给客户
+
+<a name="signature"></a>
+
+#### 1.3.3 签名方式
+
+1. 将`Body`数据与`secretKey`私钥拼接，拼接不加任何字符
+2. 进行sha256加密；转成HEX大写字符串
+
+```
+private String generateSign(String json, String secretKey) {
+    String payload = json + secretKey;
+    log.debug("payload：" + payload);
+    return DigestUtils.sha256Hex(payload).toUpperCase();
+}
+```
+
+## 2.交易所标准接口
+### 2.1 币种及币对配置
+> 接入前请先查询交易所支持的交易币种和交易币对，只有支持的币种及币对MasterDAX才会提供相关的交易服务。如有疑问可与商务人员沟通。
+
+#### 2.1.1 运营商币种列表查询
 查询所有交易所支持的币种
->请求方式：POST
+> 请求方式：POST
 </BR>
 接口名：[/v1/coin/broker-configAsset-list](#brokerassetlistusingpost)
 
-####2.1.2 运营商币对列表查询
-查询所有交易所支持的交易币对
->请求方式：POST</br>
->接口名：[/v1/coin/broker-configAsset-list](#brokerassetlistusingpost)
+#### 2.1.2 运营商币对列表查询
+查询所有交易所支持的交易币对，根据交易币种查询币对
+> 请求方式：POST</br>
+> 接口名：[/v1/symbol/symbols/coin](#getsymbolsbycoinusingpost)
 
-####2.1.3 运营商币对及手续费录入
+#### 2.1.3 运营商币对及手续费录入
 运营商交易所的币种对，如`EOS/BTC`,需要先在MasterDAX录入后才能获取深度及K线等数据。</br>
 **注意**：手续费由运营商维护，MasterDAX会在交易撮合请求时根据此字段计算用户手续费。
->请求方式：POST</br>
->接口名：[/v1/symbol/save-update-fee](#addfeeusingpost)
+> 请求方式：POST</br>
+> 接口名：[/v1/symbol/save-update-fee](#addfeeusingpost)
 
 
-####2.1.4 运营商录入手续费查询
-#####2.1.4.1 单个币对查询
->请求方式：POST</br>
->接口名：[/v1/symbol/get-fee](#getfeeusingpost)
+#### 2.1.4 运营商录入手续费查询
+##### 2.1.4.1 单个币对查询
+> 请求方式：POST</br>
+> 接口名：[/v1/symbol/get-fee](#getfeeusingpost)
 
 
-#####2.1.4.2 所有币对不分页查询
->请求方式：POST</br>
->接口名：[/v1/symbol/get-fees](#getfeeusingpost_1)
+##### 2.1.4.2 所有币对列表查询
+
+> 请求方式：POST</br>
+> 接口名：[/v1/symbol/get-fees](#getfeeusingpost_1)
 
 
-###2.2 用户资产
-####2.2.1 创建用户
+### 2.2 用户资产
+#### 2.2.1 创建用户
 运营商的用户注册完成后需要将用户的`uid`同步给MasterDAX，以便用户可以完成后续的充值，交易等操作。
->请求方式：POST</br>
->接口名： [/v1/user/create-user](#createuserusingpost)
+> 请求方式：POST</br>
+> 接口名： [/v1/user/create-user](#createuserusingpost)
+
+#### 2.2.2 修改白名单用户
+运营商。
+> 请求方式：POST</br>
+> 接口名： [/v1/user/modify-whitelist](#modifywhitelistusingpost)
 
 
-####2.2.2 用户资产查询
+#### 2.2.2 用户资产查询
 支持查询用户的所有资产数量，包括可用余额，冻结余额。
->请求方式：POST</br>
->接口名： [/v1/asset/accounts](#getuseraccountassetsusingpost)
+> 请求方式：POST</br>
+> 接口名： [/v1/asset/accounts](#getuseraccountassetsusingpost)
 
 
-###2.3 用户充值
-####2.3.1 获取用户充值地址
+### 2.3 用户充值
+#### 2.3.1 获取用户充值地址
 用户点击充值时可调用此接口获取充值地址，用户之前若没有充值地址系统会自动分配一个。
->请求方式：POST</br>
->接口名： [/v1/coin-transfer/in-address-query](#getcointransferinaddressusingpost)
+> 请求方式：POST</br>
+> 接口名： [/v1/coin-transfer/in-address-query](#getcointransferinaddressusingpost)
 
 
-####2.3.2 用户充值回调
-用户充值到账后回调券商提供的回调地址，通知券商充值到账
->请求方式：POST</br>
->接口名： [券商提供的回调地址](#depositCallBack)
+#### 2.3.2 用户充值回调
+用户充值到账后回调运营商提供的回调地址，通知运营商充值到账
+> 请求方式：POST</br>
+> 接口名： [运营商提供的回调地址](#depositCallBack)
 
 
-####2.3.3 充值记录查询
+#### 2.3.3 充值记录查询
 支持查询单个用户和所有用的充值记录。
->请求方式：POST</br>
->接口名： [/v1/deposit/deposit-coin-details](#getdepositcoinusingpost)
+> 请求方式：POST</br>
+> 接口名： [/v1/deposit/deposit-coin-details](#getdepositcoinusingpost)
 
     
-###2.4 Exchange交易
-####2.4.1 市场深度查询
+### 2.4 Exchange交易
+#### 2.4.1 市场深度查询
 支持查询MasterDAX的所有深度数据。
->请求方式：GET</br>
->接口名： [/trade/trade?symbol=symbolCode](#getdepthendpoint)
+> 请求方式：GET</br>
+> 接口名： [/trade/trade?symbol=symbolCode](#getdepthendpoint)
 
 
-####2.4.2 获取K线
+#### 2.4.2 获取K线
 支持查询MasterDAX的所有K线数据。
->请求方式：POST</br>
->接口名： [/v1/data/kline/kline-pages](getklinepagesusingpost)
+> 请求方式：POST</br>
+> 接口名： [/v1/data/kline/kline-pages](getklinepagesusingpost)
 
 
-####2.4.3 获取历史交易
+#### 2.4.3 获取历史交易
 支持按币对查询MasterDAX的历史交易记录。
->请求方式：POST</br>
->接口名： 缺失中
+> 请求方式：POST</br>
+> 接口名： 缺失中
 
 
-####2.4.4 24H数据查询
+#### 2.4.4 24H数据查询
 支持某币对的最新成交价、24H涨跌幅、24H最高价、24H最低价、24H成交量等数据。
->请求方式：GET</br>
->接口名： [/trade/info?symbol=BTC_EOS](#gettradedendpoint)
+> 请求方式：GET</br>
+> 接口名： [/trade/info?symbol=BTC_EOS](#gettradedendpoint)
 
 
-####2.4.5 用户交易挂单
-用户在某币对的挂单请求发送到MasterDAX处理，挂单频次限制？？？。
->请求方式：POST</br>
->接口名： [/v1/match/order](#matchorderusingpost)
+#### 2.4.5 用户交易挂单
+用户在某币对的挂单请求发送到MasterDAX处理。
+> 请求方式：POST</br>
+> 接口名： [/v1/match/order](#matchorderusingpost)
 
 
-####2.4.5 用户交易撤单
-用户在某币对的撤单请求发送到MasterDAX处理，撤单逻辑？？。
->请求方式：POST</br>
->接口名： [/v1/match/match-order/cancel](#cancelmatchorderusingpost)
+#### 2.4.6 用户交易撤单
+用户在某币对的撤单请求发送到MasterDAX处理。
+> 请求方式：POST</br>
+> 接口名： [/v1/match/match-order/cancel](#cancelmatchorderusingpost)
 
 
-####2.4.6 用户单笔订单查询
+#### 2.4.7 用户单笔订单状态查询
 根据订单号查询用户在某币对的挂单状态等信息。
->请求方式：POST</br>
->接口名：  [/v1/match/order-query](#orderqueryusingpost)
+> 请求方式：POST</br>
+> 接口名：  [/v1/match/order-query](#orderqueryusingpost)
 
 
-####2.4.7 用户未成交订单列表查询
+#### 2.4.8 用户进行中订单列表查询
 查询用户在某币对挂单，状态为`waiting` 和 `pending` 的订单分页列表。
->请求方式：POST</br>
->接口名： [/v1/match/match-order/current](#getmatchorderdetailusingpost)
+> 请求方式：POST</br>
+> 接口名： [/v1/match/match-order/current](#getmatchorderdetailusingpost)
 
-####2.4.7 用户挂单历史查询
+#### 2.4.9 用户已处理订单查询
 查询用户在某币对挂单，状态为`success` 和 `cancel` 的订单分页列表。
->请求方式：POST</br>
->接口名：  [/v1/match/match-order/history](#gethistorymatchorderusingpost)
+> 请求方式：POST</br>
+> 接口名：  [/v1/match/match-order/history](#gethistorymatchorderusingpost)
 
 
-####2.4.8 所有用户交易记录查询
+#### 2.4.10 所有用户交易记录查询
 查询所有用户在某币对挂单的交易订单分页列表。
->请求方式：POST</br>
->接口名：  [/v1/trade/userTradeRecord](#getusertraderecordusingpost)
+> 请求方式：POST</br>
+> 接口名：  [/v1/trade/userTradeRecord](#getusertraderecordusingpost)
 
 
-###2.5 用户提现
-####2.5.1 用户提现申请
+### 2.5 用户提现
+#### 2.5.1 用户提现申请
 用户发起提现操作时调用此接口扣除用户对应资产。
->请求方式：POST</br>
->接口名：  [/v1/withdraw/withdraw-coin-user](#userwithdrawcoinusingpost)
+> 请求方式：POST</br>
+> 接口名：  [/v1/withdraw/withdraw-coin-user](#userwithdrawcoinusingpost)
 
 
-####2.5.2 用户可提现余额查询
+#### 2.5.2 用户可提现金额查询
 用户发起提现操作时调用此接口查询当前可提现的余额数量。
->请求方式：POST</br>
->接口名：  [/v1/withdraw/query-balance](#querybalanceusingpost)
+> 请求方式：POST</br>
+> 接口名：  [/v1/withdraw/query-balance](#querybalanceusingpost)
 
 
-####2.5.2 提现未处理数量查询
+#### 2.5.3 提现未处理数量查询
 用户发起的提现申请如果需要在运营商后台进行审核，可查询该接口获取某币种的提现申请未处理的数量。
->请求方式：POST</br>
->接口名：  [/v1/withdraw/unverifiedCount](#queryunverifiedcountusingpost)
+
+> 请求方式：POST</br>
+> 接口名：  [/v1/withdraw/unverifiedCount](#queryunverifiedcountusingpost)
 
 
-####2.5.2 提现审核
+#### 2.5.4 用户提现审核处理
 用户发起的提现申请如果在运营商后台通过审核，可调用此接口。上送的审核状态为 ` 通过 ` 时会做提现操作并回调给运营商，若上送的审核状态为 ` 拒绝 `，系统会将扣除用户的币退还到用户资产中。
->请求方式：POST</br>
->接口名：  [/v1/withdraw/confirm](#confirmusingpost)
+
+> 请求方式：POST</br>
+> 接口名：  [/v1/withdraw/confirm](#confirmusingpost)
 
 
-####2.5.2 用户提现总数查询
-用户发起的提现。
->请求方式：POST</br>
->接口名：  [/v1/withdraw/queryWithdrawTotal](#querywithdrawtotalusingpost)
+#### 2.5.5 用户已提现总数查询
+用户发起的提现总数。
+
+> 请求方式：POST</br>
+> 接口名：  [/v1/withdraw/queryWithdrawTotal](#querywithdrawtotalusingpost)
 
 
-####2.5.2 用户提现记录查询
+#### 2.5.6 用户提现记录查询
 查询用户发起的提现记录，可按 `UID` 和 `status` 查询。`UID` 为 `NULL`时显示所有的用户提现记录。
  
 
->请求方式：POST</br>
->接口名：  /v1/withdraw/queryWithdrawTotal
+> 请求方式：POST</br>
+> 接口名：  /v1/withdraw/queryWithdrawTotal
 
-####2.5.3 用户提现回调
-用户提现到账或提现触发限额后审核失败回调通知券商
->请求方式：POST</br>
->接口名： [券商提供的回调地址](#withdrawCallBack)
+#### 2.5.7 用户提现回调
+用户提现到账或提现触发限额后审核失败回调通知运营商
+
+> 请求方式：POST</br>
+> 接口名： [运营商提供的回调地址](#withdrawCallBack)
 
 
 ## 3.运营商结算接口
 用户交易产生的手续费，系统会在 `T+0` 实时结算给运营商，运营商可以在结算账户中查询并按情况做转出操作。
 
-###3.1 结算账户资产查询
-用户交易产生的手续费，系统会在 `T+0` 实时结算给运营商，运营商可以在结算账户中查询并按情况做转出操作。
+### 3.1 结算账户资产查询
+查询运营商的结算账户的资产总数，用户交易产生的手续费、提现的手续费会进入结算账户中。
  
 
->请求方式：POST</br>
->接口名：  [/v1/coin/brokerAsset-query](#querybrokerfinanceusingpost)
+> 请求方式：POST</br>
+> 接口名：  [/v1/coin/brokerAsset-query](#querybrokerfinanceusingpost)
 
 
-###3.2 结算账户资产转出申请
+### 3.2 结算账户资产转出申请
 结算账户的资产可申请转出至运营商自己的地址。
  
 
->请求方式：POST</br>
->接口名：  [/v1/withdraw/withdraw-coin-broker](#brokerwithdrawcoinusingpost)
+> 请求方式：POST</br>
+> 接口名：  [/v1/withdraw/withdraw-coin-broker](#brokerwithdrawcoinusingpost)
 
 
-###3.3 结算账户资产转出状态回调
+### 3.3 结算账户资产转出状态回调
 结算账户的资产转出申请成功后，系统会将转出的状态回调给运营商，状态有 `到账` 和 `拒绝`。
->请求方式：POST</br>
->接口名：  缺失
+> 请求方式：POST</br>
+> 接口名： [券商提供的回调地址](#withdrawCallBack)
 
 
-###3.4 结算账户资产转出记录查询
+
+### 3.4 结算账户资产转出记录查询
 查询该结算账户下资产转出的记录，输入的`UID=0`时查询的是运营商的转出记录。
  
 
->请求方式：POST</br>
->接口名：  [/v1/withdraw/withdraw-coin-details](#getwithdrawcoinusingpost)
+> 请求方式：POST</br>
+> 接口名：  [/v1/withdraw/withdraw-coin-details](#getwithdrawcoinusingpost)
 
 
-###3.5 交易分成查询
+### 3.5 交易对分成比例查询
 用户交易产生的手续费与MasterDAX的分成比例查询。
  
 
->请求方式：POST</br>
->接口名：  [/v1/symbol/sharings](#getsharingusingpost)
+> 请求方式：POST</br>
+> 接口名：  [/v1/symbol/sharings](#getsharingusingpost)
 
 
-###3.6 结算订单明细查询
-查询用户交易产生的手续费结算明细。
+### 3.6 结算订单记录查询
+查询用户交易和提现产生的手续费结算记录。
  
 
->请求方式：POST</br>
->接口名：  [/v1/settle/settle-record](#querysettlerecordusingpost)
+> 请求方式：POST</br>
+> 接口名：  [/v1/settle/settle-record](#querysettlerecordusingpost)
 
 
-##4.错误码
+## 4.错误码
 
 |code|msg|
 |---|---|
@@ -257,8 +301,8 @@ MasterDAX做为交易所云服务提供商，给运营商及运营商的用户�
 |**TOO_MANY_RECORDS**|记录过多|
 |**REPEAT_MESSAGE**|重复的消息|  //重复的消息
 |**USER_NOT_EXIST**|用户信息不存在|
-|**BROKER_ASSET_NOT_EXIST**|券商没有分配该币种|
-|**BROKER_ASSET_EXIST**|券商已经分配该币种|
+|**BROKER_ASSET_NOT_EXIST**|运营商没有分配该币种|
+|**BROKER_ASSET_EXIST**|运营商已经分配该币种|
 |**SYMBOL_FORMAT_ERROR**|币对格式错误|
 |**INVALID_SYMBOL**|交易对未生效|
 |**ORDER_CREATE_ERROR**|订单创建失败|
@@ -268,7 +312,7 @@ MasterDAX做为交易所云服务提供商，给运营商及运营商的用户�
 |**ORDER_HAD_PROCESSING**|订单处理中|
 |**ORDER_HAD_TRADED**|订单已撮合|
 |**NO_PERMISSION**|没有权限|  //没有权限
-|**BROKER_NOT_EXIST**|券商未入驻|
+|**BROKER_NOT_EXIST**|运营商未入驻|
 |**ADDRESS_ASSIGN_ERROR**|生成地址出错|
 |**MESSAGE_TO_MQ_FAIL**|发送消息到mq失败|
 |**ADDRESS_STATUS_ERROR**|地址状态错误|
@@ -291,43 +335,6 @@ MasterDAX做为交易所云服务提供商，给运营商及运营商的用户�
 |**BATCH_INSERT_FINANCEDETAIL_ERROR**|批量更新资产失败|
 
 # cloud-exchange-api
-
-
-<a name="overview"></a>
-## Overview
-
-### Version information
-*Version* : 1.0
-
-### URI scheme
-*Host* : 192.168.168.126:8080  
-*BasePath* : /api
-
-### 请求交互说明
-
-
-- 提交方式
-    
-    将封装好的请求参数转换为`JSON 格式`通过POST方式提交至服务器。
-
-- 服务器响应
-
-    服务器首先对用户请求数据进行参数安全校验，通过校验后根据业务逻辑将响应数据以`JSON 格式` 响应给客户
-
-<a name="signature"></a>
-### 签名方式
-
-1. 将`Body`数据与`secretKey`私钥拼接，拼接不加任何字符
-2. 进行sha256加密；转成HEX大写字符串
-
-```
-private String generateSign(String json, String secretKey) {
-    String payload = json + secretKey;
-    log.debug("payload：" + payload);
-    return DigestUtils.sha256Hex(payload).toUpperCase();
-}
-```
-
 
 <a name="paths"></a>
 ## ENDPOINT
@@ -453,7 +460,7 @@ GET /trade/info?symbol=BTC_EOS
 ## Paths
 
 <a name="getuseraccountassetsusingpost"></a>
-### 查询用户资产列表(以券商支持且分配给用户币种列表为基础)
+### 用户资产查询(以运营商支持且分配给用户币种列表为基础)
 ```
 POST /v1/asset/accounts
 ```
@@ -495,7 +502,7 @@ POST /v1/asset/accounts
 
 
 <a name="getcointransferinaddressusingpost"></a>
-### 获取转入地址
+### 获取用户充值地址
 ```
 POST /v1/coin-transfer/in-address-query
 ```
@@ -566,7 +573,7 @@ POST /v1/coin-transfer/in-address-query
 #### Tags
 
 <a name="brokerassetlistusingpost"></a>
-### 券商有效币种列表，包含提现手续费
+### 运营商币种列表查询（包含提现手续费）
 ```
 POST /v1/coin/broker-configAsset-list
 ```
@@ -608,7 +615,7 @@ POST /v1/coin/broker-configAsset-list
 
 
 <a name="querybrokerfinanceusingpost"></a>
-### 券商资产查询
+### 运营商结算账户资产查询
 ```
 POST /v1/coin/brokerAsset-query
 ```
@@ -650,7 +657,7 @@ POST /v1/coin/brokerAsset-query
 
 
 <a name="getklinepagesusingpost"></a>
-### K线分页查询
+### 获取K线（分页查询）
 ```
 POST /v1/data/kline/kline-pages
 ```
@@ -692,7 +699,7 @@ POST /v1/data/kline/kline-pages
 
 
 <a name="getdepositcoinusingpost"></a>
-### 券商用户充值记录
+### 运营商用户充值记录查询
 ```
 POST /v1/deposit/deposit-coin-details
 ```
@@ -734,7 +741,7 @@ POST /v1/deposit/deposit-coin-details
 
 
 <a name="cancelmatchorderusingpost"></a>
-### 交易撤单
+### 用户交易撤单
 ```
 POST /v1/match/match-order/cancel
 ```
@@ -776,7 +783,7 @@ POST /v1/match/match-order/cancel
 
 
 <a name="getmatchorderdetailusingpost"></a>
-### 查询进行中下单记录
+### 用户进行中订单列表查询
 ```
 POST /v1/match/match-order/current
 ```
@@ -818,7 +825,7 @@ POST /v1/match/match-order/current
 
 
 <a name="gethistorymatchorderusingpost"></a>
-### 查询已处理下单记录
+### 用户已处理订单查询
 ```
 POST /v1/match/match-order/history
 ```
@@ -859,50 +866,9 @@ POST /v1/match/match-order/history
 * match-order-controller
 
 
-<a name="getmatchrecordusingpost"></a>
-### 查询订单成交记录
-```
-POST /v1/match/match-order/match-record
-```
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Header**|**accessKey**  <br>*required*|访问秘钥|string|
-|**Header**|**sign**  <br>*required*|签名|string|
-|**Body**|**req**  <br>*required*|req|[MatchRecordPageQueryReq](#matchrecordpagequeryreq)|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**200**|OK|[ApiResponse«PageInfo«MatchRecordDto»»](#1a5f60cc3d37772c5c069b2403786fbf)|
-|**201**|Created|No Content|
-|**401**|Unauthorized|No Content|
-|**403**|Forbidden|No Content|
-|**404**|Not Found|No Content|
-
-
-#### Consumes
-
-* `application/json`
-
-
-#### Produces
-
-* `\*/*`
-
-
-#### Tags
-
-* match-order-controller
-
 
 <a name="matchorderusingpost"></a>
-### 交易下单
+### 用户交易挂单
 ```
 POST /v1/match/order
 ```
@@ -944,7 +910,7 @@ POST /v1/match/order
 
 
 <a name="orderqueryusingpost"></a>
-### 交易状态查询
+### 用户单笔订单状态查询
 ```
 POST /v1/match/order-query
 ```
@@ -986,7 +952,7 @@ POST /v1/match/order-query
 
 
 <a name="querysettlerecordusingpost"></a>
-### 券商结算记录
+### 运营商结算订单记录查询
 ```
 POST /v1/settle/settle-record
 ```
@@ -1028,7 +994,7 @@ POST /v1/settle/settle-record
 
 
 <a name="getfeeusingpost"></a>
-### 查询交易对
+### 查询单个币对
 ```
 POST /v1/symbol/get-fee
 ```
@@ -1070,7 +1036,7 @@ POST /v1/symbol/get-fee
 
 
 <a name="getfeeusingpost_1"></a>
-### 查询交易对列表
+### 查询所有币对列表
 ```
 POST /v1/symbol/get-fees
 ```
@@ -1112,7 +1078,7 @@ POST /v1/symbol/get-fees
 
 
 <a name="addfeeusingpost"></a>
-### 录入交易对及手续费
+### 录入币对及手续费
 ```
 POST /v1/symbol/save-update-fee
 ```
@@ -1154,7 +1120,7 @@ POST /v1/symbol/save-update-fee
 
 
 <a name="getsharingusingpost"></a>
-### 交易对分成比率查询
+### 交易对分成比例查询
 ```
 POST /v1/symbol/sharings
 ```
@@ -1196,7 +1162,7 @@ POST /v1/symbol/sharings
 
 
 <a name="getsymbolsbycoinusingpost"></a>
-### 根据币种查询币对
+### 根据币种查询币对列表
 ```
 POST /v1/symbol/symbols/coin
 ```
@@ -1238,7 +1204,7 @@ POST /v1/symbol/symbols/coin
 
 
 <a name="getusertraderecordusingpost"></a>
-### 券商用户交易记录
+### 运营商用户交易记录查询
 ```
 POST /v1/trade/userTradeRecord
 ```
@@ -1321,46 +1287,6 @@ POST /v1/user/create-user
 * user-controller
 
 
-<a name="modifyuserusingpost"></a>
-### 修改用户信息
-```
-POST /v1/user/modify-user
-```
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Header**|**accessKey**  <br>*required*|访问秘钥|string|
-|**Header**|**sign**  <br>*required*|签名|string|
-|**Body**|**req**  <br>*required*|req|[CreateUserReq](#createuserreq)|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**200**|OK|[ApiResponse«UserData»](#7d001d219a176986c8b2752c3f4d05d3)|
-|**201**|Created|No Content|
-|**401**|Unauthorized|No Content|
-|**403**|Forbidden|No Content|
-|**404**|Not Found|No Content|
-
-
-#### Consumes
-
-* `application/json`
-
-
-#### Produces
-
-* `\*/*`
-
-
-#### Tags
-
-* user-controller
 
 
 <a name="modifywhitelistusingpost"></a>
@@ -1406,7 +1332,7 @@ POST /v1/user/modify-whitelist
 
 
 <a name="confirmusingpost"></a>
-### 券商用户提现审核处理
+### 运营商用户提现审核处理
 ```
 POST /v1/withdraw/confirm
 ```
@@ -1532,7 +1458,7 @@ POST /v1/withdraw/queryWithdrawTotal
 
 
 <a name="queryunverifiedcountusingpost"></a>
-### 币种未处理提现数量
+### 单币种提现未处理数量
 ```
 POST /v1/withdraw/unverifiedCount
 ```
@@ -1574,7 +1500,7 @@ POST /v1/withdraw/unverifiedCount
 
 
 <a name="brokerwithdrawcoinusingpost"></a>
-### 券商提币申请
+### 运营商资产转出申请
 ```
 POST /v1/withdraw/withdraw-coin-broker
 ```
@@ -1616,7 +1542,7 @@ POST /v1/withdraw/withdraw-coin-broker
 
 
 <a name="getwithdrawcoinusingpost"></a>
-### 券商提现记录
+### 运营商转出记录
 ```
 POST /v1/withdraw/withdraw-coin-details
 ```
@@ -1658,7 +1584,7 @@ POST /v1/withdraw/withdraw-coin-details
 
 
 <a name="userwithdrawcoinusingpost"></a>
-### 券商用户提币申请
+### 运营商用户提现申请
 ```
 POST /v1/withdraw/withdraw-coin-user
 ```
@@ -1974,7 +1900,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 |Name|Description|Schema|
 |---|---|---|
-|**assetList**  <br>*optional*|券商支持币种列表|< string > array|
+|**assetList**  <br>*optional*|运营商支持币种列表|< string > array|
 |**uid**  <br>*optional*|用户id|integer (int64)|
 
 
@@ -2027,7 +1953,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 |Name|Description|Schema|
 |---|---|---|
-|**brokerId**  <br>*optional*|券商ID|string|
+|**brokerId**  <br>*optional*|运营商ID|string|
 |**feeMin**  <br>*optional*|最低手续费|number|
 |**makerFeeRatio**  <br>*optional*|MAKER费率|number|
 |**method**  <br>*optional*|手续费方式|string|
@@ -2053,7 +1979,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 |Name|Description|Schema|
 |---|---|---|
-|**clientOrderNo**  <br>*required*|券商订单号|string|
+|**clientOrderNo**  <br>*required*|运营商订单号|string|
 |**nanoTime**  <br>*required*|当前时间戳(纳秒)|integer (int64)|
 
 
@@ -2063,9 +1989,9 @@ POST /v1/withdraw/withdraw-coin-user
 |Name|Description|Schema|
 |---|---|---|
 |**birthday**  <br>*optional*|生日  <br>**Example** : `"2018-01-01"`|string|
-|**brokerUid**  <br>*required*|券商用户ID|integer (int64)|
+|**brokerUid**  <br>*required*|运营商用户ID|integer (int64)|
 |**country**  <br>*optional*|国籍|string|
-|**email**  <br>*optional*|券商用户邮箱|string|
+|**email**  <br>*optional*|运营商用户邮箱|string|
 |**gender**  <br>*optional*|性别|string|
 |**ip**  <br>*optional*|用户注册IP|string|
 |**name**  <br>*optional*|用户名|string|
@@ -2159,9 +2085,9 @@ POST /v1/withdraw/withdraw-coin-user
 
 |Name|Description|Schema|
 |---|---|---|
-|**clientOrderNo**  <br>*optional*|券商订单号|string|
+|**clientOrderNo**  <br>*optional*|运营商订单号|string|
 |**createTime**  <br>*optional*|订单创建时间|string (date-time)|
-|**fee**  <br>*optional*|券商用户扣除手续费|number|
+|**fee**  <br>*optional*|运营商用户扣除手续费|number|
 |**feeAsset**  <br>*optional*|收取手续费币种|string|
 |**matchedMoney**  <br>*optional*|成交金额|number|
 |**money**  <br>*optional*||number|
@@ -2183,7 +2109,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 |Name|Description|Schema|
 |---|---|---|
-|**brokerUid**  <br>*required*|券商用户id|integer (int64)|
+|**brokerUid**  <br>*required*|运营商用户id|integer (int64)|
 |**endTime**  <br>*optional*|结束时间  <br>**Example** : `"2018-01-01 23:59:59"`|string (date-time)|
 |**nanoTime**  <br>*required*|当前时间戳(纳秒)|integer (int64)|
 |**orderType**  <br>*optional*|订单类型|enum (BUY, SELL)|
@@ -2200,8 +2126,8 @@ POST /v1/withdraw/withdraw-coin-user
 |Name|Description|Schema|
 |---|---|---|
 |**amount**  <br>*required*|下单数量|number|
-|**brokerUid**  <br>*required*|券商用户id|integer (int64)|
-|**clientOrderNo**  <br>*required*|券商订单号|string|
+|**brokerUid**  <br>*required*|运营商用户id|integer (int64)|
+|**clientOrderNo**  <br>*required*|运营商订单号|string|
 |**nanoTime**  <br>*required*|当前时间戳(纳秒)|integer (int64)|
 |**orderType**  <br>*required*|订单类型|enum (BUY, SELL)|
 |**price**  <br>*required*|下单价格|number|
@@ -2225,8 +2151,8 @@ POST /v1/withdraw/withdraw-coin-user
 
 |Name|Description|Schema|
 |---|---|---|
-|**brokerUid**  <br>*required*|券商用户ID|integer (int64)|
-|**clientOrderNo**  <br>*required*|券商订单号|string|
+|**brokerUid**  <br>*required*|运营商用户ID|integer (int64)|
+|**clientOrderNo**  <br>*required*|运营商订单号|string|
 |**nanoTime**  <br>*required*|当前时间戳(纳秒)|integer (int64)|
 |**pageNo**  <br>*optional*|页面|integer (int32)|
 |**pageSize**  <br>*optional*|每页数量|integer (int32)|
@@ -2239,7 +2165,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 |Name|Description|Schema|
 |---|---|---|
-|**brokerUid**  <br>*required*|券商用户ID|integer (int64)|
+|**brokerUid**  <br>*required*|运营商用户ID|integer (int64)|
 |**nanoTime**  <br>*required*|当前时间戳(纳秒)|integer (int64)|
 |**whiteList**  <br>*required*|是否白名单  <br>**Example** : `false`|boolean|
 
@@ -2374,7 +2300,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 |Name|Description|Schema|
 |---|---|---|
-|**clientOrderNo**  <br>*required*|券商订单号|string|
+|**clientOrderNo**  <br>*required*|运营商订单号|string|
 |**nanoTime**  <br>*required*|当前时间戳(纳秒)|integer (int64)|
 
 
@@ -2468,8 +2394,8 @@ POST /v1/withdraw/withdraw-coin-user
 
 |Name|Description|Schema|
 |---|---|---|
-|**brokerId**  <br>*optional*|券商ID|string|
-|**brokerSharing**  <br>*optional*|券商分成量|number|
+|**brokerId**  <br>*optional*|运营商ID|string|
+|**brokerSharing**  <br>*optional*|运营商分成量|number|
 |**cloudSharing**  <br>*optional*|平台分成量|number|
 |**method**  <br>*optional*|方式: SHARING|string|
 |**whitelistFee**  <br>*optional*|白名单手续费|number|
@@ -2532,7 +2458,7 @@ POST /v1/withdraw/withdraw-coin-user
 |Name|Description|Schema|
 |---|---|---|
 |**assetCode**  <br>*optional*|币种|string|
-|**status**  <br>*optional*|提现状态 SUCCESS(成功) PROCESSING（区块确认中）,FAILURE(失败),UNKNOWN(未知状态),WAIT(提交后),REFUSE(券商拒绝),CLOUD_REFUSE(平台拒绝),SUSPEND(超限额挂起)|enum (SUCCESS, PROCESSING, FAILURE, UNKNOWN, WAIT, REFUSE, CLOUD_REFUSE, SUSPEND)|
+|**status**  <br>*optional*|提现状态 SUCCESS(成功) PROCESSING（区块确认中）,FAILURE(失败),UNKNOWN(未知状态),WAIT(提交后),REFUSE(运营商拒绝),CLOUD_REFUSE(平台拒绝),SUSPEND(超限额挂起)|enum (SUCCESS, PROCESSING, FAILURE, UNKNOWN, WAIT, REFUSE, CLOUD_REFUSE, SUSPEND)|
 
 
 <a name="userdata"></a>
@@ -2541,7 +2467,7 @@ POST /v1/withdraw/withdraw-coin-user
 |Name|Description|Schema|
 |---|---|---|
 |**birthday**  <br>*optional*|生日  <br>**Example** : `"2018-01-01"`|string|
-|**brokerId**  <br>*optional*|券商ID|string|
+|**brokerId**  <br>*optional*|运营商ID|string|
 |**country**  <br>*optional*|国籍|string|
 |**email**  <br>*optional*|用户邮箱|string|
 |**gender**  <br>*optional*|性别|string|
@@ -2550,7 +2476,7 @@ POST /v1/withdraw/withdraw-coin-user
 |**name**  <br>*optional*|用户名|string|
 |**phone**  <br>*optional*|手机号|string|
 |**platId**  <br>*optional*|平台用户ID|string|
-|**uid**  <br>*optional*|券商用户ID|integer (int64)|
+|**uid**  <br>*optional*|运营商用户ID|integer (int64)|
 
 
 <a name="withdrawcoindetaildto"></a>
@@ -2611,7 +2537,7 @@ POST /v1/withdraw/withdraw-coin-user
 |**pageNo**  <br>*optional*|页数|integer (int32)|
 |**pageSize**  <br>*optional*|页码|integer (int32)|
 |**startDate**  <br>*optional*|开始日期|string (date-time)|
-|**status**  <br>*optional*|提现状态 SUCCESS(成功) PROCESSING（区块确认中）,FAILURE(失败),UNKNOWN(未知状态),WAIT(提交后),REFUSE(券商拒绝),CLOUD_REFUSE(平台拒绝),SUSPEND(超限额挂起)|enum (SUCCESS, PROCESSING, FAILURE, UNKNOWN, WAIT, REFUSE, CLOUD_REFUSE, SUSPEND)|
+|**status**  <br>*optional*|提现状态 SUCCESS(成功) PROCESSING（区块确认中）,FAILURE(失败),UNKNOWN(未知状态),WAIT(提交后),REFUSE(运营商拒绝),CLOUD_REFUSE(平台拒绝),SUSPEND(超限额挂起)|enum (SUCCESS, PROCESSING, FAILURE, UNKNOWN, WAIT, REFUSE, CLOUD_REFUSE, SUSPEND)|
 |**uid**  <br>*optional*|用户id|integer (int64)|
 
 
@@ -2621,7 +2547,7 @@ POST /v1/withdraw/withdraw-coin-user
 |Name|Description|Schema|
 |---|---|---|
 |**assetCode**  <br>*optional*|币种|string|
-|**status**  <br>*optional*|提现状态 SUCCESS(成功) PROCESSING（区块确认中）,FAILURE(失败),UNKNOWN(未知状态),WAIT(提交后),REFUSE(券商拒绝),CLOUD_REFUSE(平台拒绝),SUSPEND(超限额挂起)|enum (SUCCESS, PROCESSING, FAILURE, UNKNOWN, WAIT, REFUSE, CLOUD_REFUSE, SUSPEND)|
+|**status**  <br>*optional*|提现状态 SUCCESS(成功) PROCESSING（区块确认中）,FAILURE(失败),UNKNOWN(未知状态),WAIT(提交后),REFUSE(运营商拒绝),CLOUD_REFUSE(平台拒绝),SUSPEND(超限额挂起)|enum (SUCCESS, PROCESSING, FAILURE, UNKNOWN, WAIT, REFUSE, CLOUD_REFUSE, SUSPEND)|
 |**uid**  <br>*optional*|用户id|integer (int64)|
 
 
@@ -2640,7 +2566,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 |Name|Description|Schema|
 |---|---|---|
-|**brokerId**  <br>*optional*|券商id |String|
+|**brokerId**  <br>*optional*|运营商id |String|
 |**uid**  <br>*optional*|用户id|Long|
 |**assetCode**  <br>*optional*|币种|String|
 |**toWallet**  <br>*optional*|充值地址 |String|
@@ -2664,7 +2590,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 |Name|Description|Schema|
 |---|---|---|
-|**brokerId**  <br>*optional*|券商id |String|
+|**brokerId**  <br>*optional*|运营商id |String|
 |**uid**  <br>*optional*|用户id|Long|
 |**assetCode**  <br>*optional*|币种|String|
 |**clientOrderNo**  <br>*optional*|客户订单号 |String|
@@ -2677,4 +2603,3 @@ POST /v1/withdraw/withdraw-coin-user
 |**createDate**  <br>*optional*|提现时间|Date|
 |**finishDate**  <br>*optional*|到账时间|Date|
 |**nanoTime**  <br>*optional*|时间戳|Long|
-
