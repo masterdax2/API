@@ -392,7 +392,7 @@ GET `/trade/trade?symbol=`symbolCode
 }
 ```
 
-
+<a name="gettradedetail"></a>
 ### 24HOURS
 ```
 GET /trade/detail
