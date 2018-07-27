@@ -1,8 +1,327 @@
-# MasterDAX运营商服务端接入手册_V1.0
---------------------
+---
+title: MasterDAX运营商服务端接入手册_V1.0
+---
+<!-- TOC -->
+
+- [1. 简介](#1-简介)
+    - [1.1. 接入准备](#11-接入准备)
+    - [1.2. 交易流程说明](#12-交易流程说明)
+        - [1.2.1. 运营商用户交易流程](#121-运营商用户交易流程)
+        - [1.2.2. 运营商结算流程](#122-运营商结算流程)
+    - [1.3. 请求交互](#13-请求交互)
+        - [1.3.1. URI scheme](#131-uri-scheme)
+        - [1.3.2. 请求交互说明](#132-请求交互说明)
+        - [1.3.3. 签名方式](#133-签名方式)
+- [2. 交易所标准接口](#2-交易所标准接口)
+    - [2.1. 币种及币对配置](#21-币种及币对配置)
+        - [2.1.1. 运营商币种列表查询](#211-运营商币种列表查询)
+        - [2.1.2. 运营商币对列表查询](#212-运营商币对列表查询)
+        - [2.1.3. 运营商币对及手续费录入](#213-运营商币对及手续费录入)
+        - [2.1.4. 运营商录入手续费查询](#214-运营商录入手续费查询)
+            - [2.1.4.1. 单个币对查询](#2141-单个币对查询)
+            - [2.1.4.2. 所有币对列表查询](#2142-所有币对列表查询)
+    - [2.2. 用户资产](#22-用户资产)
+        - [2.2.1. 创建用户](#221-创建用户)
+        - [2.2.2. 修改白名单用户](#222-修改白名单用户)
+        - [2.2.3. 用户资产查询](#223-用户资产查询)
+    - [2.3. 用户充值](#23-用户充值)
+        - [2.3.1. 获取用户充值地址](#231-获取用户充值地址)
+        - [2.3.2. 用户充值回调](#232-用户充值回调)
+        - [2.3.3. 充值记录查询](#233-充值记录查询)
+    - [2.4. Exchange交易](#24-exchange交易)
+        - [2.4.1. 市场深度查询](#241-市场深度查询)
+        - [2.4.2. 获取K线](#242-获取k线)
+        - [2.4.3. 获取历史交易](#243-获取历史交易)
+        - [2.4.4. 24H数据查询](#244-24h数据查询)
+        - [2.4.5. 用户交易挂单](#245-用户交易挂单)
+        - [2.4.6. 用户交易撤单](#246-用户交易撤单)
+        - [2.4.7. 用户单笔订单状态查询](#247-用户单笔订单状态查询)
+        - [2.4.8. 用户进行中订单列表查询](#248-用户进行中订单列表查询)
+        - [2.4.9. 用户已处理订单查询](#249-用户已处理订单查询)
+        - [2.4.10. 所有用户交易记录查询](#2410-所有用户交易记录查询)
+    - [2.5. 用户提现](#25-用户提现)
+        - [2.5.1. 用户提现申请](#251-用户提现申请)
+        - [2.5.2. 用户可提现金额查询](#252-用户可提现金额查询)
+        - [2.5.3. 提现未处理数量查询](#253-提现未处理数量查询)
+        - [2.5.4. 用户提现审核处理](#254-用户提现审核处理)
+        - [2.5.5. 用户已提现总数查询](#255-用户已提现总数查询)
+        - [2.5.6. 用户提现记录查询](#256-用户提现记录查询)
+        - [2.5.7. 用户提现回调](#257-用户提现回调)
+- [3. 运营商结算接口](#3-运营商结算接口)
+    - [3.1. 结算账户资产查询](#31-结算账户资产查询)
+    - [3.2. 结算账户资产转出申请](#32-结算账户资产转出申请)
+    - [3.3. 结算账户资产转出状态回调](#33-结算账户资产转出状态回调)
+    - [3.4. 结算账户资产转出记录查询](#34-结算账户资产转出记录查询)
+    - [3.5. 币对分成比例查询](#35-币对分成比例查询)
+    - [3.6. 结算订单记录查询](#36-结算订单记录查询)
+- [4. 错误码](#4-错误码)
+- [5. 附录](#5-附录)
+    - [5.1. PUBLIC](#51-public)
+        - [5.1.1. Depth](#511-depth)
+            - [5.1.1.1. Parameters](#5111-parameters)
+            - [5.1.1.2. Responses example](#5112-responses-example)
+        - [5.1.2. HOURS](#512-hours)
+            - [5.1.2.1. Responses example](#5121-responses-example)
+        - [5.1.3. TRADED ORDER](#513-traded-order)
+            - [5.1.3.1. Parameters](#5131-parameters)
+            - [5.1.3.2. Responses example](#5132-responses-example)
+    - [5.2. PRIVATE](#52-private)
+        - [5.2.1. 用户资产查询(以运营商支持且分配给用户币种列表为基础)](#521-用户资产查询以运营商支持且分配给用户币种列表为基础)
+            - [5.2.1.1. Parameters](#5211-parameters)
+            - [5.2.1.2. Responses](#5212-responses)
+            - [5.2.1.3. Consumes](#5213-consumes)
+            - [5.2.1.4. Produces](#5214-produces)
+            - [5.2.1.5. Tags](#5215-tags)
+        - [5.2.2. 获取用户充值地址](#522-获取用户充值地址)
+            - [5.2.2.1. Parameters](#5221-parameters)
+            - [5.2.2.2. Responses](#5222-responses)
+            - [5.2.2.3. Consumes](#5223-consumes)
+            - [5.2.2.4. Produces](#5224-produces)
+            - [5.2.2.5. Tags](#5225-tags)
+        - [5.2.3. 充值回调](#523-充值回调)
+            - [5.2.3.1. Parameters](#5231-parameters)
+            - [5.2.3.2. Responses](#5232-responses)
+            - [5.2.3.3. Consumes](#5233-consumes)
+            - [5.2.3.4. Produces](#5234-produces)
+            - [5.2.3.5. Tags](#5235-tags)
+        - [5.2.4. 运营商币种列表查询（包含提现手续费）](#524-运营商币种列表查询包含提现手续费)
+            - [5.2.4.1. Parameters](#5241-parameters)
+            - [5.2.4.2. Responses](#5242-responses)
+            - [5.2.4.3. Consumes](#5243-consumes)
+            - [5.2.4.4. Produces](#5244-produces)
+            - [5.2.4.5. Tags](#5245-tags)
+        - [5.2.5. 运营商结算账户资产查询](#525-运营商结算账户资产查询)
+            - [5.2.5.1. Parameters](#5251-parameters)
+            - [5.2.5.2. Responses](#5252-responses)
+            - [5.2.5.3. Consumes](#5253-consumes)
+            - [5.2.5.4. Produces](#5254-produces)
+            - [5.2.5.5. Tags](#5255-tags)
+        - [5.2.6. 获取K线（分页查询）](#526-获取k线分页查询)
+            - [5.2.6.1. Parameters](#5261-parameters)
+            - [5.2.6.2. Responses](#5262-responses)
+            - [5.2.6.3. Consumes](#5263-consumes)
+            - [5.2.6.4. Produces](#5264-produces)
+            - [5.2.6.5. Tags](#5265-tags)
+        - [5.2.7. 运营商用户充值记录查询](#527-运营商用户充值记录查询)
+            - [5.2.7.1. Parameters](#5271-parameters)
+            - [5.2.7.2. Responses](#5272-responses)
+            - [5.2.7.3. Consumes](#5273-consumes)
+            - [5.2.7.4. Produces](#5274-produces)
+            - [5.2.7.5. Tags](#5275-tags)
+        - [5.2.8. 用户交易撤单](#528-用户交易撤单)
+            - [5.2.8.1. Parameters](#5281-parameters)
+            - [5.2.8.2. Responses](#5282-responses)
+            - [5.2.8.3. Consumes](#5283-consumes)
+            - [5.2.8.4. Produces](#5284-produces)
+            - [5.2.8.5. Tags](#5285-tags)
+        - [5.2.9. 用户进行中订单列表查询](#529-用户进行中订单列表查询)
+            - [5.2.9.1. Parameters](#5291-parameters)
+            - [5.2.9.2. Responses](#5292-responses)
+            - [5.2.9.3. Consumes](#5293-consumes)
+            - [5.2.9.4. Produces](#5294-produces)
+            - [5.2.9.5. Tags](#5295-tags)
+        - [5.2.10. 用户已处理订单查询](#5210-用户已处理订单查询)
+            - [5.2.10.1. Parameters](#52101-parameters)
+            - [5.2.10.2. Responses](#52102-responses)
+            - [5.2.10.3. Consumes](#52103-consumes)
+            - [5.2.10.4. Produces](#52104-produces)
+            - [5.2.10.5. Tags](#52105-tags)
+        - [5.2.11. 用户交易挂单](#5211-用户交易挂单)
+            - [5.2.11.1. Parameters](#52111-parameters)
+            - [5.2.11.2. Responses](#52112-responses)
+            - [5.2.11.3. Consumes](#52113-consumes)
+            - [5.2.11.4. Produces](#52114-produces)
+            - [5.2.11.5. Tags](#52115-tags)
+        - [5.2.12. 用户单笔订单状态查询](#5212-用户单笔订单状态查询)
+            - [5.2.12.1. Parameters](#52121-parameters)
+            - [5.2.12.2. Responses](#52122-responses)
+            - [5.2.12.3. Consumes](#52123-consumes)
+            - [5.2.12.4. Produces](#52124-produces)
+            - [5.2.12.5. Tags](#52125-tags)
+        - [5.2.13. 运营商结算订单记录查询](#5213-运营商结算订单记录查询)
+            - [5.2.13.1. Parameters](#52131-parameters)
+            - [5.2.13.2. Responses](#52132-responses)
+            - [5.2.13.3. Consumes](#52133-consumes)
+            - [5.2.13.4. Produces](#52134-produces)
+            - [5.2.13.5. Tags](#52135-tags)
+        - [5.2.14. 查询单个币对](#5214-查询单个币对)
+            - [5.2.14.1. Parameters](#52141-parameters)
+            - [5.2.14.2. Responses](#52142-responses)
+            - [5.2.14.3. Consumes](#52143-consumes)
+            - [5.2.14.4. Produces](#52144-produces)
+            - [5.2.14.5. Tags](#52145-tags)
+        - [5.2.15. 查询所有币对列表](#5215-查询所有币对列表)
+            - [5.2.15.1. Parameters](#52151-parameters)
+            - [5.2.15.2. Responses](#52152-responses)
+            - [5.2.15.3. Consumes](#52153-consumes)
+            - [5.2.15.4. Produces](#52154-produces)
+            - [5.2.15.5. Tags](#52155-tags)
+        - [5.2.16. 录入币对及手续费](#5216-录入币对及手续费)
+            - [5.2.16.1. Parameters](#52161-parameters)
+            - [5.2.16.2. Responses](#52162-responses)
+            - [5.2.16.3. Consumes](#52163-consumes)
+            - [5.2.16.4. Produces](#52164-produces)
+            - [5.2.16.5. Tags](#52165-tags)
+        - [5.2.17. 币对分成比例查询](#5217-币对分成比例查询)
+            - [5.2.17.1. Parameters](#52171-parameters)
+            - [5.2.17.2. Responses](#52172-responses)
+            - [5.2.17.3. Consumes](#52173-consumes)
+            - [5.2.17.4. Produces](#52174-produces)
+            - [5.2.17.5. Tags](#52175-tags)
+        - [5.2.18. 根据币种查询币对列表](#5218-根据币种查询币对列表)
+            - [5.2.18.1. Parameters](#52181-parameters)
+            - [5.2.18.2. Responses](#52182-responses)
+            - [5.2.18.3. Consumes](#52183-consumes)
+            - [5.2.18.4. Produces](#52184-produces)
+            - [5.2.18.5. Tags](#52185-tags)
+        - [5.2.19. 运营商用户交易记录查询](#5219-运营商用户交易记录查询)
+            - [5.2.19.1. Parameters](#52191-parameters)
+            - [5.2.19.2. Responses](#52192-responses)
+            - [5.2.19.3. Consumes](#52193-consumes)
+            - [5.2.19.4. Produces](#52194-produces)
+            - [5.2.19.5. Tags](#52195-tags)
+        - [5.2.20. 创建用户](#5220-创建用户)
+            - [5.2.20.1. Parameters](#52201-parameters)
+            - [5.2.20.2. Responses](#52202-responses)
+            - [5.2.20.3. Consumes](#52203-consumes)
+            - [5.2.20.4. Produces](#52204-produces)
+            - [5.2.20.5. Tags](#52205-tags)
+        - [5.2.21. 修改白名单用户](#5221-修改白名单用户)
+            - [5.2.21.1. Parameters](#52211-parameters)
+            - [5.2.21.2. Responses](#52212-responses)
+            - [5.2.21.3. Consumes](#52213-consumes)
+            - [5.2.21.4. Produces](#52214-produces)
+            - [5.2.21.5. Tags](#52215-tags)
+        - [5.2.22. 运营商用户提现审核处理](#5222-运营商用户提现审核处理)
+            - [5.2.22.1. Parameters](#52221-parameters)
+            - [5.2.22.2. Responses](#52222-responses)
+            - [5.2.22.3. Consumes](#52223-consumes)
+            - [5.2.22.4. Produces](#52224-produces)
+            - [5.2.22.5. Tags](#52225-tags)
+        - [5.2.23. 查询可提现金额](#5223-查询可提现金额)
+            - [5.2.23.1. Parameters](#52231-parameters)
+            - [5.2.23.2. Responses](#52232-responses)
+            - [5.2.23.3. Consumes](#52233-consumes)
+            - [5.2.23.4. Produces](#52234-produces)
+            - [5.2.23.5. Tags](#52235-tags)
+        - [5.2.24. 已提现总数](#5224-已提现总数)
+            - [5.2.24.1. Parameters](#52241-parameters)
+            - [5.2.24.2. Responses](#52242-responses)
+            - [5.2.24.3. Consumes](#52243-consumes)
+            - [5.2.24.4. Produces](#52244-produces)
+            - [5.2.24.5. Tags](#52245-tags)
+        - [5.2.25. 单币种提现未处理数量](#5225-单币种提现未处理数量)
+            - [5.2.25.1. Parameters](#52251-parameters)
+            - [5.2.25.2. Responses](#52252-responses)
+            - [5.2.25.3. Consumes](#52253-consumes)
+            - [5.2.25.4. Produces](#52254-produces)
+            - [5.2.25.5. Tags](#52255-tags)
+        - [5.2.26. 运营商资产转出申请](#5226-运营商资产转出申请)
+            - [5.2.26.1. Parameters](#52261-parameters)
+            - [5.2.26.2. Responses](#52262-responses)
+            - [5.2.26.3. Consumes](#52263-consumes)
+            - [5.2.26.4. Produces](#52264-produces)
+            - [5.2.26.5. Tags](#52265-tags)
+        - [5.2.27. 运营商转出记录](#5227-运营商转出记录)
+            - [5.2.27.1. Parameters](#52271-parameters)
+            - [5.2.27.2. Responses](#52272-responses)
+            - [5.2.27.3. Consumes](#52273-consumes)
+            - [5.2.27.4. Produces](#52274-produces)
+            - [5.2.27.5. Tags](#52275-tags)
+        - [5.2.28. 运营商用户提现申请](#5228-运营商用户提现申请)
+            - [5.2.28.1. Parameters](#52281-parameters)
+            - [5.2.28.2. Responses](#52282-responses)
+            - [5.2.28.3. Consumes](#52283-consumes)
+            - [5.2.28.4. Produces](#52284-produces)
+            - [5.2.28.5. Tags](#52285-tags)
+        - [5.2.29. 提现回调](#5229-提现回调)
+            - [5.2.29.1. Parameters](#52291-parameters)
+            - [5.2.29.2. Responses](#52292-responses)
+            - [5.2.29.3. Consumes](#52293-consumes)
+            - [5.2.29.4. Produces](#52294-produces)
+    - [5.3. Definitions](#53-definitions)
+        - [5.3.1. ApiResponse«BrokerPageModel«BrokerAssetDto»»](#531-apiresponse«brokerpagemodel«brokerassetdto»»)
+        - [5.3.2. ApiResponse«BrokerSymbolFeeData»](#532-apiresponse«brokersymbolfeedata»)
+        - [5.3.3. ApiResponse«KlineQueryPages»](#533-apiresponse«klinequerypages»)
+        - [5.3.4. ApiResponse«List«AssetDto»»](#534-apiresponse«list«assetdto»»)
+        - [5.3.5. ApiResponse«List«BrokerConfigAssetDto»»](#535-apiresponse«list«brokerconfigassetdto»»)
+        - [5.3.6. ApiResponse«List«BrokerSymbolFeeData»»](#536-apiresponse«list«brokersymbolfeedata»»)
+        - [5.3.7. ApiResponse«List«SymbolData»»](#537-apiresponse«list«symboldata»»)
+        - [5.3.8. ApiResponse«List«TransferInAddressDto»»](#538-apiresponse«list«transferinaddressdto»»)
+        - [5.3.9. ApiResponse«Map«string,bigdecimal»»](#539-apiresponse«map«stringbigdecimal»»)
+        - [5.3.10. ApiResponse«Map«string,int»»](#5310-apiresponse«map«stringint»»)
+        - [5.3.11. ApiResponse«PageInfo«MatchOrderDetail»»](#5311-apiresponse«pageinfo«matchorderdetail»»)
+        - [5.3.12. ApiResponse«PageInfo«MatchRecordDto»»](#5312-apiresponse«pageinfo«matchrecorddto»»)
+        - [5.3.13. ApiResponse«PageModel«DepositDetailDto»»](#5313-apiresponse«pagemodel«depositdetaildto»»)
+        - [5.3.14. ApiResponse«PageModel«SettleRecordDto»»](#5314-apiresponse«pagemodel«settlerecorddto»»)
+        - [5.3.15. ApiResponse«PageModel«TradeOrderDto»»](#5315-apiresponse«pagemodel«tradeorderdto»»)
+        - [5.3.16. ApiResponse«PageModel«WithdrawCoinDetailDto»»](#5316-apiresponse«pagemodel«withdrawcoindetaildto»»)
+        - [5.3.17. ApiResponse«SymbolSharingData»](#5317-apiresponse«symbolsharingdata»)
+        - [5.3.18. ApiResponse«UserData»](#5318-apiresponse«userdata»)
+        - [5.3.19. ApiResponse«Void»](#5319-apiresponse«void»)
+        - [5.3.20. ApiResponse«bigdecimal»](#5320-apiresponse«bigdecimal»)
+        - [5.3.21. AssetDto](#5321-assetdto)
+        - [5.3.22. AssetRequest](#5322-assetrequest)
+        - [5.3.23. BrokerAssetAccountRequest](#5323-brokerassetaccountrequest)
+        - [5.3.24. BrokerAssetDto](#5324-brokerassetdto)
+        - [5.3.25. BrokerAssetRequest](#5325-brokerassetrequest)
+        - [5.3.26. BrokerConfigAssetDto](#5326-brokerconfigassetdto)
+        - [5.3.27. BrokerPageModel«BrokerAssetDto»](#5327-brokerpagemodel«brokerassetdto»)
+        - [5.3.28. BrokerSymbolFeeData](#5328-brokersymbolfeedata)
+        - [5.3.29. BrokerWithdrawRequest](#5329-brokerwithdrawrequest)
+        - [5.3.30. CancelOrderReq](#5330-cancelorderreq)
+        - [5.3.31. CreateUserReq](#5331-createuserreq)
+        - [5.3.32. DepositDetailDto](#5332-depositdetaildto)
+        - [5.3.33. DepositQueryRequest](#5333-depositqueryrequest)
+        - [5.3.34. KlineQueryPages](#5334-klinequerypages)
+        - [5.3.35. KlineQueryReq](#5335-klinequeryreq)
+        - [5.3.36. KlineRecord](#5336-klinerecord)
+        - [5.3.37. Map«string,bigdecimal»](#5337-map«stringbigdecimal»)
+        - [5.3.38. Map«string,int»](#5338-map«stringint»)
+        - [5.3.39. MatchOrderDetail](#5339-matchorderdetail)
+        - [5.3.40. MatchOrderPageQueryReq](#5340-matchorderpagequeryreq)
+        - [5.3.41. MatchOrderReq](#5341-matchorderreq)
+        - [5.3.42. MatchRecordDto](#5342-matchrecorddto)
+        - [5.3.43. MatchRecordPageQueryReq](#5343-matchrecordpagequeryreq)
+        - [5.3.44. ModifyWhitelistReq](#5344-modifywhitelistreq)
+        - [5.3.45. PageInfo«MatchOrderDetail»](#5345-pageinfo«matchorderdetail»)
+        - [5.3.46. PageInfo«MatchRecordDto»](#5346-pageinfo«matchrecorddto»)
+        - [5.3.47. PageModel«DepositDetailDto»](#5347-pagemodel«depositdetaildto»)
+        - [5.3.48. PageModel«SettleRecordDto»](#5348-pagemodel«settlerecorddto»)
+        - [5.3.49. PageModel«TradeOrderDto»](#5349-pagemodel«tradeorderdto»)
+        - [5.3.50. PageModel«WithdrawCoinDetailDto»](#5350-pagemodel«withdrawcoindetaildto»)
+        - [5.3.51. PageRequest](#5351-pagerequest)
+        - [5.3.52. Pages«KlineRecord»](#5352-pages«klinerecord»)
+        - [5.3.53. QueryOrderReq](#5353-queryorderreq)
+        - [5.3.54. SettleQueryRequest](#5354-settlequeryrequest)
+        - [5.3.55. SettleRecordDto](#5355-settlerecorddto)
+        - [5.3.56. Symbol](#5356-symbol)
+        - [5.3.57. SymbolData](#5357-symboldata)
+        - [5.3.58. SymbolFeeAddReq](#5358-symbolfeeaddreq)
+        - [5.3.59. SymbolFeeListQueryReq](#5359-symbolfeelistqueryreq)
+        - [5.3.60. SymbolFeeQueryReq](#5360-symbolfeequeryreq)
+        - [5.3.61. SymbolQueryReq](#5361-symbolqueryreq)
+        - [5.3.62. SymbolSharingData](#5362-symbolsharingdata)
+        - [5.3.63. TradeOrderDto](#5363-tradeorderdto)
+        - [5.3.64. TradeOrderQueryRequest](#5364-tradeorderqueryrequest)
+        - [5.3.65. TransferInAddressDto](#5365-transferinaddressdto)
+        - [5.3.66. UnVerifiedCountRequest](#5366-unverifiedcountrequest)
+        - [5.3.67. UserData](#5367-userdata)
+        - [5.3.68. WithdrawCoinDetailDto](#5368-withdrawcoindetaildto)
+        - [5.3.69. WithdrawCoinRequest](#5369-withdrawcoinrequest)
+        - [5.3.70. WithdrawConfirmRequest](#5370-withdrawconfirmrequest)
+        - [5.3.71. WithdrawQueryRequest](#5371-withdrawqueryrequest)
+        - [5.3.72. WithdrawTotalAmountRequest](#5372-withdrawtotalamountrequest)
+        - [5.3.73. DepositApiResponseDto](#5373-depositapiresponsedto)
+        - [5.3.74. DepositResponseData](#5374-depositresponsedata)
+        - [5.3.75. WithdrawApiResponseDto](#5375-withdrawapiresponsedto)
+        - [5.3.76. WithdrawResponseData](#5376-withdrawresponsedata)
+
+<!-- /TOC -->
+
 MasterDAX做为服务商，给所有运营商的交易所提供交易所用户挂单及撮合，用户资产及充值提现等服务。同时做为交易所的运营商，我们会将您的手续费的盈利T+0结算到账户中，随时可以完成资产转出。
 
-## 1.简介
+# 1. 简介
 MasterDAX做为交易所云服务提供商，给运营商及运营商的用户提供以下服务：
 
 | 角色 | 提供的服务 | 备注 |
@@ -11,31 +330,31 @@ MasterDAX做为交易所云服务提供商，给运营商及运营商的用户�
 | 运营商 | 用户币币交易产生的手续费、提现手续费T+0结算到运营商账户 | |
 
 
-### 1.1 接入准备
+## 1.1. 接入准备
 与MasterDAX签订合同后，我们会给您生成唯一标识的运营商ID `brokerId` , 同时也会生成对应的 `APIkey` , `APIsercretkey` 做签名验签使用。请在接入前提供以下信息：</br>
 
 -  回调地址</br>
 -  绑定的IP，最多支持5个IP
 
-### 1.2 交易流程说明
-#### 1.2.1 运营商用户交易流程
+## 1.2. 交易流程说明
+### 1.2.1. 运营商用户交易流程
 按文档提供的接口接入后，可以完成用户在交易所下单，撤单等操作，具体流程如图：
 
 ![云交易所接入流程](flow_image_tag.png)
 
 ![用户提现](user_withdraw.jpeg)
 
-#### 1.2.2 运营商结算流程
+### 1.2.2. 运营商结算流程
 运营商用户一旦在交易所产生手续费（交易手续费和提现手续费）时，MasterDAX会根据约定将运营商的手续费收益T+0实时结算至运营商在MasterDAX开立的账户中，运营商可自行通过接口发起转出操作，转出至运营商自己的地址中。具体流程如图：
 
 ![运营商提现](broker_withdraw.jpeg)
 
-### 1.3 请求交互
-#### 1.3.1 URI scheme
+## 1.3. 请求交互
+### 1.3.1. URI scheme
 *Host* : ip:8080  
 *BasePath* : /api
 
-#### 1.3.2 请求交互说明
+### 1.3.2. 请求交互说明
 1. 提交方式
     
     将封装好的请求参数转换为`JSON 格式`通过POST方式提交至服务器。
@@ -46,7 +365,7 @@ MasterDAX做为交易所云服务提供商，给运营商及运营商的用户�
 
 <a name="signature"></a>
 
-#### 1.3.3 签名方式
+### 1.3.3. 签名方式
 
 1. 将`Body`数据与`secretKey`私钥拼接，拼接不加任何字符
 2. 进行sha256加密；转成HEX大写字符串
@@ -59,188 +378,188 @@ private String generateSign(String json, String secretKey) {
 }
 ```
 
-## 2.交易所标准接口
-### 2.1 币种及币对配置
+# 2. 交易所标准接口
+## 2.1. 币种及币对配置
 > 接入前请先查询交易所支持的交易币种和交易币对，只有支持的币种及币对MasterDAX才会提供相关的交易服务。如有疑问可与商务人员沟通。
 
-#### 2.1.1 运营商币种列表查询
+### 2.1.1. 运营商币种列表查询
 查询所有交易所支持的币种
 > 请求方式：POST</br>
 > 接口名：[/v1/coin/broker-configAsset-list](#brokerassetlistusingpost)
 
-#### 2.1.2 运营商币对列表查询
+### 2.1.2. 运营商币对列表查询
 查询所有交易所支持的交易币对，根据交易币种查询币对
 > 请求方式：POST</br>
 > 接口名：[/v1/symbol/symbols/coin](#getsymbolsbycoinusingpost)
 
-#### 2.1.3 运营商币对及手续费录入
+### 2.1.3. 运营商币对及手续费录入
 运营商交易所的币种对，如`EOS/BTC`,需要先在MasterDAX录入后才能获取深度及K线等数据。</br>
 **注意**：手续费由运营商维护，MasterDAX会在交易撮合请求时根据此字段计算用户手续费。
 > 请求方式：POST</br>
 > 接口名：[/v1/symbol/save-update-fee](#addfeeusingpost)
 
 
-#### 2.1.4 运营商录入手续费查询
-##### 2.1.4.1 单个币对查询
+### 2.1.4. 运营商录入手续费查询
+#### 2.1.4.1. 单个币对查询
 > 请求方式：POST</br>
 > 接口名：[/v1/symbol/get-fee](#getfeeusingpost)
 
 
-##### 2.1.4.2 所有币对列表查询
+#### 2.1.4.2. 所有币对列表查询
 
 > 请求方式：POST</br>
 > 接口名：[/v1/symbol/get-fees](#getfeeusingpost_1)
 
 
-### 2.2 用户资产
-#### 2.2.1 创建用户
+## 2.2. 用户资产
+### 2.2.1. 创建用户
 运营商的用户注册完成后需要将用户的`uid`同步给MasterDAX，以便用户可以完成后续的充值，交易等操作。
 > 请求方式：POST</br>
 > 接口名： [/v1/user/create-user](#createuserusingpost)
 
-#### 2.2.2 修改白名单用户
+### 2.2.2. 修改白名单用户
 运营商可对某个用户设置白名单，白名单的用户交易手续费为0。
 > 请求方式：POST</br>
 > 接口名： [/v1/user/modify-whitelist](#modifywhitelistusingpost)
 
 
-#### 2.2.2 用户资产查询
+### 2.2.3. 用户资产查询
 支持查询用户的所有资产数量，包括可用余额，冻结余额。
 > 请求方式：POST</br>
 > 接口名： [/v1/asset/accounts](#getuseraccountassetsusingpost)
 
 
-### 2.3 用户充值
-#### 2.3.1 获取用户充值地址
+## 2.3. 用户充值
+### 2.3.1. 获取用户充值地址
 用户点击充值时可调用此接口获取充值地址，用户之前若没有充值地址系统会自动分配一个。
 > 请求方式：POST</br>
 > 接口名： [/v1/coin-transfer/in-address-query](#getcointransferinaddressusingpost)
 
 
-#### 2.3.2 用户充值回调
+### 2.3.2. 用户充值回调
 用户充值到账后回调运营商提供的回调地址，通知运营商充值到账
 > 请求方式：POST</br>
 > 接口名： [DepositCallBack](#depositCallBack)
 
 
-#### 2.3.3 充值记录查询
+### 2.3.3. 充值记录查询
 支持查询单个用户和所有用的充值记录。
 > 请求方式：POST</br>
 > 接口名： [/v1/deposit/deposit-coin-details](#getdepositcoinusingpost)
 
     
-### 2.4 Exchange交易
-#### 2.4.1 市场深度查询
+## 2.4. Exchange交易
+### 2.4.1. 市场深度查询
 支持查询MasterDAX的所有深度数据。
 > 请求方式：GET</br>
 > 接口名： [/trade/trade?symbol=symbolCode](#getdepthendpoint)
 
 
-#### 2.4.2 获取K线
+### 2.4.2. 获取K线
 支持查询MasterDAX的所有K线数据。
 > 请求方式：POST</br>币对
 > 接口名： [/v1/data/kline/kline-pages](#getklinepagesusingpost)
 
 
-#### 2.4.3 获取历史交易
+### 2.4.3. 获取历史交易
 支持按币对查询MasterDAX的成交历史交易记录。
 > 请求方式：POST</br>
 > 接口名： [/trade/info?symbol=BTC_EOS](#gettradedendpoint)
 
 
-#### 2.4.4 24H数据查询
+### 2.4.4. 24H数据查询
 支持某币对的最新成交价、24H涨跌幅、24H最高价、24H最低价、24H成交量等数据。
 > 请求方式：GET</br>
 > 接口名： [/trade/detail](#gettradedetail)
 
 
-#### 2.4.5 用户交易挂单
+### 2.4.5. 用户交易挂单
 用户在某币对的挂单请求发送到MasterDAX处理。
 > 请求方式：POST</br>
 > 接口名： [/v1/match/order](#matchorderusingpost)
 
 
-#### 2.4.6 用户交易撤单
+### 2.4.6. 用户交易撤单
 用户在某币对的撤单请求发送到MasterDAX处理。
 > 请求方式：POST</br>
 > 接口名： [/v1/match/match-order/cancel](#cancelmatchorderusingpost)
 
 
-#### 2.4.7 用户单笔订单状态查询
+### 2.4.7. 用户单笔订单状态查询
 根据订单号查询用户在某币对的挂单状态等信息。
 > 请求方式：POST</br>
 > 接口名：  [/v1/match/order-query](#orderqueryusingpost)
 
 
-#### 2.4.8 用户进行中订单列表查询
+### 2.4.8. 用户进行中订单列表查询
 查询用户在某币对挂单，状态为`waiting` 和 `pending` 的订单分页列表。
 > 请求方式：POST</br>
 > 接口名： [/v1/match/match-order/current](#getmatchorderdetailusingpost)
 
-#### 2.4.9 用户已处理订单查询
+### 2.4.9. 用户已处理订单查询
 查询用户在某币对挂单，状态为`success` 和 `cancel` 的订单分页列表。
 > 请求方式：POST</br>
 > 接口名：  [/v1/match/match-order/history](#gethistorymatchorderusingpost)
 
 
-#### 2.4.10 所有用户交易记录查询
+### 2.4.10. 所有用户交易记录查询
 查询所有用户在某币对挂单的交易订单分页列表。
 > 请求方式：POST</br>
 > 接口名：  [/v1/trade/userTradeRecord](#getusertraderecordusingpost)
 
 
-### 2.5 用户提现
-#### 2.5.1 用户提现申请
+## 2.5. 用户提现
+### 2.5.1. 用户提现申请
 用户发起提现操作时调用此接口扣除用户对应资产。
 > 请求方式：POST</br>
 > 接口名：  [/v1/withdraw/withdraw-coin-user](#userwithdrawcoinusingpost)
 
 
-#### 2.5.2 用户可提现金额查询
+### 2.5.2. 用户可提现金额查询
 用户发起提现操作时调用此接口查询当前可提现的余额数量。
 > 请求方式：POST</br>
 > 接口名：  [/v1/withdraw/query-balance](#querybalanceusingpost)
 
 
-#### 2.5.3 提现未处理数量查询
+### 2.5.3. 提现未处理数量查询
 用户发起的提现申请如果需要在运营商后台进行审核，可查询该接口获取某币种的提现申请未处理的数量。
 
 > 请求方式：POST</br>
 > 接口名：  [/v1/withdraw/unverifiedCount](#queryunverifiedcountusingpost)
 
 
-#### 2.5.4 用户提现审核处理
+### 2.5.4. 用户提现审核处理
 用户发起的提现申请如果在运营商后台通过审核，可调用此接口。上送的审核状态为 ` 通过 ` 时会做提现操作并回调给运营商，若上送的审核状态为 ` 拒绝 `，系统会将扣除用户的币退还到用户资产中。
 
 > 请求方式：POST</br>
 > 接口名：  [/v1/withdraw/confirm](#confirmusingpost)
 
 
-#### 2.5.5 用户已提现总数查询
+### 2.5.5. 用户已提现总数查询
 用户发起的提现总数。
 
 > 请求方式：POST</br>
 > 接口名：  [/v1/withdraw/queryWithdrawTotal](#querywithdrawtotalusingpost)
 
 
-#### 2.5.6 用户提现记录查询
+### 2.5.6. 用户提现记录查询
 查询用户发起的提现记录，可按 `UID` 和 `status` 查询。`UID` 为 `NULL`时显示所有的用户提现记录。
  
 
 > 请求方式：POST</br>
 > 接口名：  [/v1/withdraw/withdraw-coin-details](#getwithdrawcoinusingpost)
 
-#### 2.5.7 用户提现回调
+### 2.5.7. 用户提现回调
 用户提现到账或提现触发限额后审核失败回调通知运营商
 
 > 请求方式：POST</br>
 > 接口名： [WithdrawCallBack](#withdrawCallBack)
 
 
-## 3.运营商结算接口
+# 3. 运营商结算接口
 用户交易产生的手续费，系统会在 `T+0` 实时结算给运营商，运营商可以在结算账户中查询并按情况做转出操作。
 
-### 3.1 结算账户资产查询
+## 3.1. 结算账户资产查询
 查询运营商的结算账户的资产总数，用户交易产生的手续费、提现的手续费会进入结算账户中。
  
 
@@ -248,7 +567,7 @@ private String generateSign(String json, String secretKey) {
 > 接口名：  [/v1/coin/brokerAsset-query](#querybrokerfinanceusingpost)
 
 
-### 3.2 结算账户资产转出申请
+## 3.2. 结算账户资产转出申请
 结算账户的资产可申请转出至运营商自己的地址。
  
 
@@ -256,14 +575,14 @@ private String generateSign(String json, String secretKey) {
 > 接口名：  [/v1/withdraw/withdraw-coin-broker](#brokerwithdrawcoinusingpost)
 
 
-### 3.3 结算账户资产转出状态回调
+## 3.3. 结算账户资产转出状态回调
 结算账户的资产转出申请成功后，系统会将转出的状态回调给运营商，状态有 `到账` 和 `拒绝`。
 > 请求方式：POST</br>
 > 接口名： [WithdrawCallBack](#withdrawCallBack)
 
 
 
-### 3.4 结算账户资产转出记录查询
+## 3.4. 结算账户资产转出记录查询
 查询该结算账户下资产转出的记录，输入的`UID=0`时查询的是运营商的转出记录。
  
 
@@ -271,7 +590,7 @@ private String generateSign(String json, String secretKey) {
 > 接口名：  [/v1/withdraw/withdraw-coin-details](#getwithdrawcoinusingpost)
 
 
-### 3.5 币对分成比例查询
+## 3.5. 币对分成比例查询
 用户交易产生的手续费与MasterDAX的分成比例查询。
  
 
@@ -279,7 +598,7 @@ private String generateSign(String json, String secretKey) {
 > 接口名：  [/v1/symbol/sharings](#getsharingusingpost)
 
 
-### 3.6 结算订单记录查询
+## 3.6. 结算订单记录查询
 查询用户交易和提现产生的手续费结算记录。
  
 
@@ -287,7 +606,7 @@ private String generateSign(String json, String secretKey) {
 > 接口名：  [/v1/settle/settle-record](#querysettlerecordusingpost)
 
 
-## 4.错误码
+# 4. 错误码
 
 |code|msg|
 |---|---|
@@ -333,25 +652,25 @@ private String generateSign(String json, String secretKey) {
 |**UPDATE_FINANCE_ERROR**|更新资产失败|
 |**BATCH_INSERT_FINANCEDETAIL_ERROR**|批量更新资产失败|
 
-# cloud-exchange-api
+# 5. 附录
 
 <a name="paths"></a>
-## PUBLIC
+## 5.1. PUBLIC
 
 <a name="getdepthendpoint"></a>
-### Depth
+### 5.1.1. Depth
 ```
 GET `/trade/trade?symbol=`symbolCode
 ```
 
-#### Parameters
+#### 5.1.1.1. Parameters
 
 |参数名|   参数类型|   必填| 描述|
 | :-----    | :-----   | :-----    | :-----   |
 |symbolCode|String|是|币对（填充到URL路径中）|
 
 
-#### Responses example
+#### 5.1.1.2. Responses example
 
 ```
 {
@@ -387,12 +706,12 @@ GET `/trade/trade?symbol=`symbolCode
 ```
 
 <a name="gettradedetail"></a>
-### 24HOURS
+### 5.1.2. HOURS
 ```
 GET /trade/detail
 ```
    
-#### Responses example
+#### 5.1.2.1. Responses example
 
 ```
 {
@@ -419,18 +738,18 @@ GET /trade/detail
 ```
 
 <a name="gettradedendpoint"></a>
-### TRADED ORDER
+### 5.1.3. TRADED ORDER
 ```
 GET /trade/info?symbol=BTC_EOS
 ```
 
-#### Parameters
+#### 5.1.3.1. Parameters
 
 |参数名|   参数类型|   必填| 描述|
 | :-----    | :-----   | :-----    | :-----   |
 |symbol|String|是|币对（填充到URL路径中）|
 
-#### Responses example
+#### 5.1.3.2. Responses example
 
 ```
 {
@@ -456,16 +775,16 @@ GET /trade/info?symbol=BTC_EOS
 ```
 
 <a name="paths"></a>
-## PRIVATE
+## 5.2. PRIVATE
 
 <a name="getuseraccountassetsusingpost"></a>
-### 用户资产查询(以运营商支持且分配给用户币种列表为基础)
+### 5.2.1. 用户资产查询(以运营商支持且分配给用户币种列表为基础)
 ```
 POST /v1/asset/accounts
 ```
 
 
-#### Parameters
+#### 5.2.1.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -474,7 +793,7 @@ POST /v1/asset/accounts
 |**Body**|**request**  <br>*required*|request|[BrokerAssetAccountRequest](#brokerassetaccountrequest)|
 
 
-#### Responses
+#### 5.2.1.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -485,29 +804,29 @@ POST /v1/asset/accounts
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.1.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.1.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.1.5. Tags
 
 * user-asset-controller
 
 
 <a name="getcointransferinaddressusingpost"></a>
-### 获取用户充值地址
+### 5.2.2. 获取用户充值地址
 ```
 POST /v1/coin-transfer/in-address-query
 ```
 
 
-#### Parameters
+#### 5.2.2.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -516,7 +835,7 @@ POST /v1/coin-transfer/in-address-query
 |**Body**|**assetRequest**  <br>*required*|assetRequest|[AssetRequest](#assetrequest)|
 
 
-#### Responses
+#### 5.2.2.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -527,24 +846,24 @@ POST /v1/coin-transfer/in-address-query
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.2.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.2.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.2.5. Tags
 
 * coin-address-man-controller
 
 <a name="depositCallBack"></a>
-### 充值回调
+### 5.2.3. 充值回调
 
-#### Parameters
+#### 5.2.3.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -553,32 +872,32 @@ POST /v1/coin-transfer/in-address-query
 |**Body**|**DepositApiResponseDto**  <br>*required*|DepositApiResponseDto|[DepositApiResponseDto](#DepositApiResponseDto)|
 
 
-#### Responses
+#### 5.2.3.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
 |**200**|OK|
 
-#### Consumes
+#### 5.2.3.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.3.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.3.5. Tags
 
 <a name="brokerassetlistusingpost"></a>
-### 运营商币种列表查询（包含提现手续费）
+### 5.2.4. 运营商币种列表查询（包含提现手续费）
 ```
 POST /v1/coin/broker-configAsset-list
 ```
 
 
-#### Parameters
+#### 5.2.4.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -587,7 +906,7 @@ POST /v1/coin/broker-configAsset-list
 |**Body**|**request**  <br>*required*|request|[BrokerAssetRequest](#brokerassetrequest)|
 
 
-#### Responses
+#### 5.2.4.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -598,29 +917,29 @@ POST /v1/coin/broker-configAsset-list
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.4.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.4.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.4.5. Tags
 
 * asset-manager-controller
 
 
 <a name="querybrokerfinanceusingpost"></a>
-### 运营商结算账户资产查询
+### 5.2.5. 运营商结算账户资产查询
 ```
 POST /v1/coin/brokerAsset-query
 ```
 
 
-#### Parameters
+#### 5.2.5.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -629,7 +948,7 @@ POST /v1/coin/brokerAsset-query
 |**Body**|**request**  <br>*required*|request|[PageRequest](#pagerequest)|
 
 
-#### Responses
+#### 5.2.5.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -640,29 +959,29 @@ POST /v1/coin/brokerAsset-query
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.5.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.5.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.5.5. Tags
 
 * asset-manager-controller
 
 
 <a name="getklinepagesusingpost"></a>
-### 获取K线（分页查询）
+### 5.2.6. 获取K线（分页查询）
 ```
 POST /v1/data/kline/kline-pages
 ```
 
 
-#### Parameters
+#### 5.2.6.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -671,7 +990,7 @@ POST /v1/data/kline/kline-pages
 |**Body**|**req**  <br>*required*|req|[KlineQueryReq](#klinequeryreq)|
 
 
-#### Responses
+#### 5.2.6.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -682,29 +1001,29 @@ POST /v1/data/kline/kline-pages
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.6.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.6.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.6.5. Tags
 
 * kline-query-controller
 
 
 <a name="getdepositcoinusingpost"></a>
-### 运营商用户充值记录查询
+### 5.2.7. 运营商用户充值记录查询
 ```
 POST /v1/deposit/deposit-coin-details
 ```
 
 
-#### Parameters
+#### 5.2.7.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -713,7 +1032,7 @@ POST /v1/deposit/deposit-coin-details
 |**Body**|**request**  <br>*required*|request|[DepositQueryRequest](#depositqueryrequest)|
 
 
-#### Responses
+#### 5.2.7.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -724,29 +1043,29 @@ POST /v1/deposit/deposit-coin-details
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.7.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.7.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.7.5. Tags
 
 * deposit-coin-controller
 
 
 <a name="cancelmatchorderusingpost"></a>
-### 用户交易撤单
+### 5.2.8. 用户交易撤单
 ```
 POST /v1/match/match-order/cancel
 ```
 
 
-#### Parameters
+#### 5.2.8.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -755,7 +1074,7 @@ POST /v1/match/match-order/cancel
 |**Body**|**req**  <br>*required*|req|[CancelOrderReq](#cancelorderreq)|
 
 
-#### Responses
+#### 5.2.8.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -766,29 +1085,29 @@ POST /v1/match/match-order/cancel
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.8.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.8.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.8.5. Tags
 
 * match-order-controller
 
 
 <a name="getmatchorderdetailusingpost"></a>
-### 用户进行中订单列表查询
+### 5.2.9. 用户进行中订单列表查询
 ```
 POST /v1/match/match-order/current
 ```
 
 
-#### Parameters
+#### 5.2.9.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -797,7 +1116,7 @@ POST /v1/match/match-order/current
 |**Body**|**req**  <br>*required*|req|[MatchOrderPageQueryReq](#matchorderpagequeryreq)|
 
 
-#### Responses
+#### 5.2.9.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -808,29 +1127,29 @@ POST /v1/match/match-order/current
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.9.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.9.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.9.5. Tags
 
 * match-order-controller
 
 
 <a name="gethistorymatchorderusingpost"></a>
-### 用户已处理订单查询
+### 5.2.10. 用户已处理订单查询
 ```
 POST /v1/match/match-order/history
 ```
 
 
-#### Parameters
+#### 5.2.10.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -839,7 +1158,7 @@ POST /v1/match/match-order/history
 |**Body**|**req**  <br>*required*|req|[MatchOrderPageQueryReq](#matchorderpagequeryreq)|
 
 
-#### Responses
+#### 5.2.10.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -850,30 +1169,30 @@ POST /v1/match/match-order/history
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.10.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.10.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.10.5. Tags
 
 * match-order-controller
 
 
 
 <a name="matchorderusingpost"></a>
-### 用户交易挂单
+### 5.2.11. 用户交易挂单
 ```
 POST /v1/match/order
 ```
 
 
-#### Parameters
+#### 5.2.11.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -882,7 +1201,7 @@ POST /v1/match/order
 |**Body**|**req**  <br>*required*|req|[MatchOrderReq](#matchorderreq)|
 
 
-#### Responses
+#### 5.2.11.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -893,29 +1212,29 @@ POST /v1/match/order
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.11.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.11.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.11.5. Tags
 
 * match-order-controller
 
 
 <a name="orderqueryusingpost"></a>
-### 用户单笔订单状态查询
+### 5.2.12. 用户单笔订单状态查询
 ```
 POST /v1/match/order-query
 ```
 
 
-#### Parameters
+#### 5.2.12.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -924,7 +1243,7 @@ POST /v1/match/order-query
 |**Body**|**req**  <br>*required*|req|[QueryOrderReq](#queryorderreq)|
 
 
-#### Responses
+#### 5.2.12.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -935,29 +1254,29 @@ POST /v1/match/order-query
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.12.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.12.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.12.5. Tags
 
 * match-order-controller
 
 
 <a name="querysettlerecordusingpost"></a>
-### 运营商结算订单记录查询
+### 5.2.13. 运营商结算订单记录查询
 ```
 POST /v1/settle/settle-record
 ```
 
 
-#### Parameters
+#### 5.2.13.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -966,7 +1285,7 @@ POST /v1/settle/settle-record
 |**Body**|**request**  <br>*required*|request|[SettleQueryRequest](#settlequeryrequest)|
 
 
-#### Responses
+#### 5.2.13.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -977,29 +1296,29 @@ POST /v1/settle/settle-record
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.13.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.13.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.13.5. Tags
 
 * settle-manager-controller
 
 
 <a name="getfeeusingpost"></a>
-### 查询单个币对
+### 5.2.14. 查询单个币对
 ```
 POST /v1/symbol/get-fee
 ```
 
 
-#### Parameters
+#### 5.2.14.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1008,7 +1327,7 @@ POST /v1/symbol/get-fee
 |**Body**|**req**  <br>*required*|req|[SymbolFeeQueryReq](#symbolfeequeryreq)|
 
 
-#### Responses
+#### 5.2.14.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1019,29 +1338,29 @@ POST /v1/symbol/get-fee
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.14.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.14.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.14.5. Tags
 
 * symbol-controller
 
 
 <a name="getfeeusingpost_1"></a>
-### 查询所有币对列表
+### 5.2.15. 查询所有币对列表
 ```
 POST /v1/symbol/get-fees
 ```
 
 
-#### Parameters
+#### 5.2.15.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1050,7 +1369,7 @@ POST /v1/symbol/get-fees
 |**Body**|**req**  <br>*required*|req|[SymbolFeeListQueryReq](#symbolfeelistqueryreq)|
 
 
-#### Responses
+#### 5.2.15.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1061,29 +1380,29 @@ POST /v1/symbol/get-fees
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.15.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.15.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.15.5. Tags
 
 * symbol-controller
 
 
 <a name="addfeeusingpost"></a>
-### 录入币对及手续费
+### 5.2.16. 录入币对及手续费
 ```
 POST /v1/symbol/save-update-fee
 ```
 
 
-#### Parameters
+#### 5.2.16.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1092,7 +1411,7 @@ POST /v1/symbol/save-update-fee
 |**Body**|**req**  <br>*required*|req|[SymbolFeeAddReq](#symbolfeeaddreq)|
 
 
-#### Responses
+#### 5.2.16.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1103,29 +1422,29 @@ POST /v1/symbol/save-update-fee
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.16.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.16.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.16.5. Tags
 
 * symbol-controller
 
 
 <a name="getsharingusingpost"></a>
-### 币对分成比例查询
+### 5.2.17. 币对分成比例查询
 ```
 POST /v1/symbol/sharings
 ```
 
 
-#### Parameters
+#### 5.2.17.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1134,7 +1453,7 @@ POST /v1/symbol/sharings
 |**Query**|**nanoTime**  <br>*required*|当前时间戳(纳秒)|integer (int64)|
 
 
-#### Responses
+#### 5.2.17.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1145,29 +1464,29 @@ POST /v1/symbol/sharings
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.17.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.17.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.17.5. Tags
 
 * symbol-controller
 
 
 <a name="getsymbolsbycoinusingpost"></a>
-### 根据币种查询币对列表
+### 5.2.18. 根据币种查询币对列表
 ```
 POST /v1/symbol/symbols/coin
 ```
 
 
-#### Parameters
+#### 5.2.18.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1176,7 +1495,7 @@ POST /v1/symbol/symbols/coin
 |**Body**|**req**  <br>*required*|req|[SymbolQueryReq](#symbolqueryreq)|
 
 
-#### Responses
+#### 5.2.18.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1187,29 +1506,29 @@ POST /v1/symbol/symbols/coin
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.18.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.18.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.18.5. Tags
 
 * symbol-controller
 
 
 <a name="getusertraderecordusingpost"></a>
-### 运营商用户交易记录查询
+### 5.2.19. 运营商用户交易记录查询
 ```
 POST /v1/trade/userTradeRecord
 ```
 
 
-#### Parameters
+#### 5.2.19.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1218,7 +1537,7 @@ POST /v1/trade/userTradeRecord
 |**Body**|**request**  <br>*required*|request|[TradeOrderQueryRequest](#tradeorderqueryrequest)|
 
 
-#### Responses
+#### 5.2.19.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1229,29 +1548,29 @@ POST /v1/trade/userTradeRecord
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.19.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.19.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.19.5. Tags
 
 * trade-manager-controller
 
 
 <a name="createuserusingpost"></a>
-### 创建用户
+### 5.2.20. 创建用户
 ```
 POST /v1/user/create-user
 ```
 
 
-#### Parameters
+#### 5.2.20.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1260,7 +1579,7 @@ POST /v1/user/create-user
 |**Body**|**req**  <br>*required*|req|[CreateUserReq](#createuserreq)|
 
 
-#### Responses
+#### 5.2.20.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1271,17 +1590,17 @@ POST /v1/user/create-user
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.20.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.20.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.20.5. Tags
 
 * user-controller
 
@@ -1289,13 +1608,13 @@ POST /v1/user/create-user
 
 
 <a name="modifywhitelistusingpost"></a>
-### 修改白名单用户
+### 5.2.21. 修改白名单用户
 ```
 POST /v1/user/modify-whitelist
 ```
 
 
-#### Parameters
+#### 5.2.21.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1304,7 +1623,7 @@ POST /v1/user/modify-whitelist
 |**Body**|**req**  <br>*required*|req|[ModifyWhitelistReq](#modifywhitelistreq)|
 
 
-#### Responses
+#### 5.2.21.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1315,29 +1634,29 @@ POST /v1/user/modify-whitelist
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.21.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.21.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.21.5. Tags
 
 * user-controller
 
 
 <a name="confirmusingpost"></a>
-### 运营商用户提现审核处理
+### 5.2.22. 运营商用户提现审核处理
 ```
 POST /v1/withdraw/confirm
 ```
 
 
-#### Parameters
+#### 5.2.22.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1346,7 +1665,7 @@ POST /v1/withdraw/confirm
 |**Body**|**request**  <br>*required*|request|[WithdrawConfirmRequest](#withdrawconfirmrequest)|
 
 
-#### Responses
+#### 5.2.22.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1357,29 +1676,29 @@ POST /v1/withdraw/confirm
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.22.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.22.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.22.5. Tags
 
 * withdraw-coin-controller
 
 
 <a name="querybalanceusingpost"></a>
-### 查询可提现金额
+### 5.2.23. 查询可提现金额
 ```
 POST /v1/withdraw/query-balance
 ```
 
 
-#### Parameters
+#### 5.2.23.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1388,7 +1707,7 @@ POST /v1/withdraw/query-balance
 |**Body**|**assetRequest**  <br>*required*|assetRequest|[AssetRequest](#assetrequest)|
 
 
-#### Responses
+#### 5.2.23.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1399,29 +1718,29 @@ POST /v1/withdraw/query-balance
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.23.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.23.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.23.5. Tags
 
 * withdraw-coin-controller
 
 
 <a name="querywithdrawtotalusingpost"></a>
-### 已提现总数
+### 5.2.24. 已提现总数
 ```
 POST /v1/withdraw/queryWithdrawTotal
 ```
 
 
-#### Parameters
+#### 5.2.24.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1430,7 +1749,7 @@ POST /v1/withdraw/queryWithdrawTotal
 |**Body**|**request**  <br>*required*|request|[WithdrawTotalAmountRequest](#withdrawtotalamountrequest)|
 
 
-#### Responses
+#### 5.2.24.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1441,29 +1760,29 @@ POST /v1/withdraw/queryWithdrawTotal
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.24.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.24.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.24.5. Tags
 
 * withdraw-coin-controller
 
 
 <a name="queryunverifiedcountusingpost"></a>
-### 单币种提现未处理数量
+### 5.2.25. 单币种提现未处理数量
 ```
 POST /v1/withdraw/unverifiedCount
 ```
 
 
-#### Parameters
+#### 5.2.25.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1472,7 +1791,7 @@ POST /v1/withdraw/unverifiedCount
 |**Body**|**request**  <br>*required*|request|[UnVerifiedCountRequest](#unverifiedcountrequest)|
 
 
-#### Responses
+#### 5.2.25.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1483,29 +1802,29 @@ POST /v1/withdraw/unverifiedCount
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.25.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.25.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.25.5. Tags
 
 * withdraw-coin-controller
 
 
 <a name="brokerwithdrawcoinusingpost"></a>
-### 运营商资产转出申请
+### 5.2.26. 运营商资产转出申请
 ```
 POST /v1/withdraw/withdraw-coin-broker
 ```
 
 
-#### Parameters
+#### 5.2.26.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1514,7 +1833,7 @@ POST /v1/withdraw/withdraw-coin-broker
 |**Body**|**request**  <br>*required*|request|[BrokerWithdrawRequest](#brokerwithdrawrequest)|
 
 
-#### Responses
+#### 5.2.26.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1525,29 +1844,29 @@ POST /v1/withdraw/withdraw-coin-broker
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.26.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.26.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.26.5. Tags
 
 * withdraw-coin-controller
 
 
 <a name="getwithdrawcoinusingpost"></a>
-### 运营商转出记录
+### 5.2.27. 运营商转出记录
 ```
 POST /v1/withdraw/withdraw-coin-details
 ```
 
 
-#### Parameters
+#### 5.2.27.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1556,7 +1875,7 @@ POST /v1/withdraw/withdraw-coin-details
 |**Body**|**withdrawQueryRequest**  <br>*required*|withdrawQueryRequest|[WithdrawQueryRequest](#withdrawqueryrequest)|
 
 
-#### Responses
+#### 5.2.27.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1567,29 +1886,29 @@ POST /v1/withdraw/withdraw-coin-details
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.27.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.27.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.27.5. Tags
 
 * withdraw-coin-controller
 
 
 <a name="userwithdrawcoinusingpost"></a>
-### 运营商用户提现申请
+### 5.2.28. 运营商用户提现申请
 ```
 POST /v1/withdraw/withdraw-coin-user
 ```
 
 
-#### Parameters
+#### 5.2.28.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1598,7 +1917,7 @@ POST /v1/withdraw/withdraw-coin-user
 |**Body**|**request**  <br>*required*|request|[WithdrawCoinRequest](#withdrawcoinrequest)|
 
 
-#### Responses
+#### 5.2.28.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
@@ -1609,24 +1928,24 @@ POST /v1/withdraw/withdraw-coin-user
 |**404**|Not Found|No Content|
 
 
-#### Consumes
+#### 5.2.28.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.28.4. Produces
 
 * `\*/*`
 
 
-#### Tags
+#### 5.2.28.5. Tags
 
 * withdraw-coin-controller
 
 <a name="withdrawCallBack"></a>
-### 提现回调
+### 5.2.29. 提现回调
 
-#### Parameters
+#### 5.2.29.1. Parameters
 
 |Type|Name|Description|Schema|
 |---|---|---|---|
@@ -1635,27 +1954,27 @@ POST /v1/withdraw/withdraw-coin-user
 |**Body**|**WithdrawApiResponseDto**  <br>*required*|WithdrawApiResponseDto|[WithdrawApiResponseDto](#WithdrawApiResponseDto)|
 
 
-#### Responses
+#### 5.2.29.2. Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
 |**200**|OK|
 
-#### Consumes
+#### 5.2.29.3. Consumes
 
 * `application/json`
 
 
-#### Produces
+#### 5.2.29.4. Produces
 
 * `\*/*`
 
 
 <a name="definitions"></a>
-## Definitions
+## 5.3. Definitions
 
 <a name="3129640bc337647a01d923c78ac55f72"></a>
-### ApiResponse«BrokerPageModel«BrokerAssetDto»»
+### 5.3.1. ApiResponse«BrokerPageModel«BrokerAssetDto»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1666,7 +1985,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="b51c21747b9194b617a696eca5e3e0b7"></a>
-### ApiResponse«BrokerSymbolFeeData»
+### 5.3.2. ApiResponse«BrokerSymbolFeeData»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1677,7 +1996,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="8710d779824389ca515611e3c22f2f66"></a>
-### ApiResponse«KlineQueryPages»
+### 5.3.3. ApiResponse«KlineQueryPages»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1688,7 +2007,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="d26b592b71e05154ee6b33c6f7a261cc"></a>
-### ApiResponse«List«AssetDto»»
+### 5.3.4. ApiResponse«List«AssetDto»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1699,7 +2018,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="29d3eb9515674d5e992cf7c3fcea8a5b"></a>
-### ApiResponse«List«BrokerConfigAssetDto»»
+### 5.3.5. ApiResponse«List«BrokerConfigAssetDto»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1710,7 +2029,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="eaeff6f989d4756651fba9d76ad90043"></a>
-### ApiResponse«List«BrokerSymbolFeeData»»
+### 5.3.6. ApiResponse«List«BrokerSymbolFeeData»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1721,7 +2040,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="b01ba55e3561c1ba9febd8ca5bc3539b"></a>
-### ApiResponse«List«SymbolData»»
+### 5.3.7. ApiResponse«List«SymbolData»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1732,7 +2051,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="ed7ed4b8e03e4b9a2ee44094fecf6ffd"></a>
-### ApiResponse«List«TransferInAddressDto»»
+### 5.3.8. ApiResponse«List«TransferInAddressDto»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1743,7 +2062,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="71933e463130fcc6486fb5fb5f34c23e"></a>
-### ApiResponse«Map«string,bigdecimal»»
+### 5.3.9. ApiResponse«Map«string,bigdecimal»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1754,7 +2073,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="3a2cb5618d3fe80bff232572e56c295a"></a>
-### ApiResponse«Map«string,int»»
+### 5.3.10. ApiResponse«Map«string,int»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1765,7 +2084,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="af561c25b8a6a1a5325d4e5de5fcefa2"></a>
-### ApiResponse«PageInfo«MatchOrderDetail»»
+### 5.3.11. ApiResponse«PageInfo«MatchOrderDetail»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1776,7 +2095,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="1a5f60cc3d37772c5c069b2403786fbf"></a>
-### ApiResponse«PageInfo«MatchRecordDto»»
+### 5.3.12. ApiResponse«PageInfo«MatchRecordDto»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1787,7 +2106,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="82c577a03b8be584493954e6197f9b45"></a>
-### ApiResponse«PageModel«DepositDetailDto»»
+### 5.3.13. ApiResponse«PageModel«DepositDetailDto»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1798,7 +2117,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="29fbac2cdffd95d8715e7846d92debdd"></a>
-### ApiResponse«PageModel«SettleRecordDto»»
+### 5.3.14. ApiResponse«PageModel«SettleRecordDto»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1809,7 +2128,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="fb7634128e52b8535dc169001707afec"></a>
-### ApiResponse«PageModel«TradeOrderDto»»
+### 5.3.15. ApiResponse«PageModel«TradeOrderDto»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1820,7 +2139,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="14dace88a1a7adb1791a784b47a8aef9"></a>
-### ApiResponse«PageModel«WithdrawCoinDetailDto»»
+### 5.3.16. ApiResponse«PageModel«WithdrawCoinDetailDto»»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1831,7 +2150,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="ceae0169df711b82935661c7d4227567"></a>
-### ApiResponse«SymbolSharingData»
+### 5.3.17. ApiResponse«SymbolSharingData»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1842,7 +2161,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="7d001d219a176986c8b2752c3f4d05d3"></a>
-### ApiResponse«UserData»
+### 5.3.18. ApiResponse«UserData»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1853,7 +2172,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="196cc3be9a21471c8e871b4fb9019cae"></a>
-### ApiResponse«Void»
+### 5.3.19. ApiResponse«Void»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1863,7 +2182,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="62e4a694d927f3a9133cf1942a9a9102"></a>
-### ApiResponse«bigdecimal»
+### 5.3.20. ApiResponse«bigdecimal»
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1874,7 +2193,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="assetdto"></a>
-### AssetDto
+### 5.3.21. AssetDto
 
 |Name|Schema|
 |---|---|
@@ -1886,7 +2205,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="assetrequest"></a>
-### AssetRequest
+### 5.3.22. AssetRequest
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1895,7 +2214,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="brokerassetaccountrequest"></a>
-### BrokerAssetAccountRequest
+### 5.3.23. BrokerAssetAccountRequest
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1904,7 +2223,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="brokerassetdto"></a>
-### BrokerAssetDto
+### 5.3.24. BrokerAssetDto
 
 |Name|Schema|
 |---|---|
@@ -1914,7 +2233,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="brokerassetrequest"></a>
-### BrokerAssetRequest
+### 5.3.25. BrokerAssetRequest
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1922,7 +2241,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="brokerconfigassetdto"></a>
-### BrokerConfigAssetDto
+### 5.3.26. BrokerConfigAssetDto
 
 |Name|Schema|
 |---|---|
@@ -1934,7 +2253,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="488103a3791c82bc492f8243b6885fb0"></a>
-### BrokerPageModel«BrokerAssetDto»
+### 5.3.27. BrokerPageModel«BrokerAssetDto»
 
 |Name|Schema|
 |---|---|
@@ -1948,7 +2267,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="brokersymbolfeedata"></a>
-### BrokerSymbolFeeData
+### 5.3.28. BrokerSymbolFeeData
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1962,7 +2281,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="brokerwithdrawrequest"></a>
-### BrokerWithdrawRequest
+### 5.3.29. BrokerWithdrawRequest
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1974,7 +2293,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="cancelorderreq"></a>
-### CancelOrderReq
+### 5.3.30. CancelOrderReq
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1983,7 +2302,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="createuserreq"></a>
-### CreateUserReq
+### 5.3.31. CreateUserReq
 
 |Name|Description|Schema|
 |---|---|---|
@@ -1999,7 +2318,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="depositdetaildto"></a>
-### DepositDetailDto
+### 5.3.32. DepositDetailDto
 
 |Name|Schema|
 |---|---|
@@ -2018,7 +2337,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="depositqueryrequest"></a>
-### DepositQueryRequest
+### 5.3.33. DepositQueryRequest
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2033,7 +2352,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="klinequerypages"></a>
-### KlineQueryPages
+### 5.3.34. KlineQueryPages
 
 |Name|Schema|
 |---|---|
@@ -2041,7 +2360,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="klinequeryreq"></a>
-### KlineQueryReq
+### 5.3.35. KlineQueryReq
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2055,7 +2374,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="klinerecord"></a>
-### KlineRecord
+### 5.3.36. KlineRecord
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2070,17 +2389,17 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="4211319230c057cdf99d0e4473178bfb"></a>
-### Map«string,bigdecimal»
+### 5.3.37. Map«string,bigdecimal»
 *Type* : < string, number > map
 
 
 <a name="d764f4858e39dc9eee78f8c7d66455a6"></a>
-### Map«string,int»
+### 5.3.38. Map«string,int»
 *Type* : < string, [Integer](#integer) > map
 
 
 <a name="matchorderdetail"></a>
-### MatchOrderDetail
+### 5.3.39. MatchOrderDetail
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2104,7 +2423,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="matchorderpagequeryreq"></a>
-### MatchOrderPageQueryReq
+### 5.3.40. MatchOrderPageQueryReq
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2120,7 +2439,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="matchorderreq"></a>
-### MatchOrderReq
+### 5.3.41. MatchOrderReq
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2136,7 +2455,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="matchrecorddto"></a>
-### MatchRecordDto
+### 5.3.42. MatchRecordDto
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2146,7 +2465,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="matchrecordpagequeryreq"></a>
-### MatchRecordPageQueryReq
+### 5.3.43. MatchRecordPageQueryReq
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2160,7 +2479,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="modifywhitelistreq"></a>
-### ModifyWhitelistReq
+### 5.3.44. ModifyWhitelistReq
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2170,7 +2489,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="25f81bde9effd814e7bcf1ea7d73c4f7"></a>
-### PageInfo«MatchOrderDetail»
+### 5.3.45. PageInfo«MatchOrderDetail»
 
 |Name|Schema|
 |---|---|
@@ -2197,7 +2516,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="0cb0127a416ce5c26ac2ee156711aacd"></a>
-### PageInfo«MatchRecordDto»
+### 5.3.46. PageInfo«MatchRecordDto»
 
 |Name|Schema|
 |---|---|
@@ -2224,7 +2543,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="922592b0bd84c95143d881659b43f5b7"></a>
-### PageModel«DepositDetailDto»
+### 5.3.47. PageModel«DepositDetailDto»
 
 |Name|Schema|
 |---|---|
@@ -2236,7 +2555,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="d8c97f7a9a191de856d9bfd7162c1b88"></a>
-### PageModel«SettleRecordDto»
+### 5.3.48. PageModel«SettleRecordDto»
 
 |Name|Schema|
 |---|---|
@@ -2248,7 +2567,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="9832eb12068b6b1627b21ae6b1ac060c"></a>
-### PageModel«TradeOrderDto»
+### 5.3.49. PageModel«TradeOrderDto»
 
 |Name|Schema|
 |---|---|
@@ -2260,7 +2579,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="63fc5848d93402e6be9ab0d7419be4ca"></a>
-### PageModel«WithdrawCoinDetailDto»
+### 5.3.50. PageModel«WithdrawCoinDetailDto»
 
 |Name|Schema|
 |---|---|
@@ -2272,7 +2591,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="pagerequest"></a>
-### PageRequest
+### 5.3.51. PageRequest
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2281,7 +2600,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="349f6b917324f326c7b17859b3a4b408"></a>
-### Pages«KlineRecord»
+### 5.3.52. Pages«KlineRecord»
 
 |Name|Schema|
 |---|---|
@@ -2295,7 +2614,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="queryorderreq"></a>
-### QueryOrderReq
+### 5.3.53. QueryOrderReq
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2304,7 +2623,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="settlequeryrequest"></a>
-### SettleQueryRequest
+### 5.3.54. SettleQueryRequest
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2315,7 +2634,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="settlerecorddto"></a>
-### SettleRecordDto
+### 5.3.55. SettleRecordDto
 
 |Name|Schema|
 |---|---|
@@ -2328,7 +2647,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="symbol"></a>
-### Symbol
+### 5.3.56. Symbol
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2337,7 +2656,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="symboldata"></a>
-### SymbolData
+### 5.3.57. SymbolData
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2347,7 +2666,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="symbolfeeaddreq"></a>
-### SymbolFeeAddReq
+### 5.3.58. SymbolFeeAddReq
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2361,7 +2680,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="symbolfeelistqueryreq"></a>
-### SymbolFeeListQueryReq
+### 5.3.59. SymbolFeeListQueryReq
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2370,7 +2689,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="symbolfeequeryreq"></a>
-### SymbolFeeQueryReq
+### 5.3.60. SymbolFeeQueryReq
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2380,7 +2699,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="symbolqueryreq"></a>
-### SymbolQueryReq
+### 5.3.61. SymbolQueryReq
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2389,7 +2708,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="symbolsharingdata"></a>
-### SymbolSharingData
+### 5.3.62. SymbolSharingData
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2401,7 +2720,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="tradeorderdto"></a>
-### TradeOrderDto
+### 5.3.63. TradeOrderDto
 
 |Name|Schema|
 |---|---|
@@ -2425,7 +2744,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="tradeorderqueryrequest"></a>
-### TradeOrderQueryRequest
+### 5.3.64. TradeOrderQueryRequest
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2442,7 +2761,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="transferinaddressdto"></a>
-### TransferInAddressDto
+### 5.3.65. TransferInAddressDto
 
 |Name|Schema|
 |---|---|
@@ -2452,7 +2771,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="unverifiedcountrequest"></a>
-### UnVerifiedCountRequest
+### 5.3.66. UnVerifiedCountRequest
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2461,7 +2780,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="userdata"></a>
-### UserData
+### 5.3.67. UserData
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2479,7 +2798,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="withdrawcoindetaildto"></a>
-### WithdrawCoinDetailDto
+### 5.3.68. WithdrawCoinDetailDto
 
 |Name|Schema|
 |---|---|
@@ -2500,7 +2819,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="withdrawcoinrequest"></a>
-### WithdrawCoinRequest
+### 5.3.69. WithdrawCoinRequest
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2514,7 +2833,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="withdrawconfirmrequest"></a>
-### WithdrawConfirmRequest
+### 5.3.70. WithdrawConfirmRequest
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2524,7 +2843,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="withdrawqueryrequest"></a>
-### WithdrawQueryRequest
+### 5.3.71. WithdrawQueryRequest
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2541,7 +2860,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="withdrawtotalamountrequest"></a>
-### WithdrawTotalAmountRequest
+### 5.3.72. WithdrawTotalAmountRequest
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2551,7 +2870,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="DepositApiResponseDto"></a>
-### DepositApiResponseDto
+### 5.3.73. DepositApiResponseDto
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2561,7 +2880,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="DepositResponseData"></a>
-### DepositResponseData
+### 5.3.74. DepositResponseData
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2575,7 +2894,7 @@ POST /v1/withdraw/withdraw-coin-user
 |**finishDate**  <br>*optional*|到账时间|Date|
 
 <a name="WithdrawApiResponseDto"></a>
-### WithdrawApiResponseDto
+### 5.3.75. WithdrawApiResponseDto
 
 |Name|Description|Schema|
 |---|---|---|
@@ -2585,7 +2904,7 @@ POST /v1/withdraw/withdraw-coin-user
 
 
 <a name="WithdrawResponseData"></a>
-### WithdrawResponseData
+### 5.3.76. WithdrawResponseData
 
 |Name|Description|Schema|
 |---|---|---|
