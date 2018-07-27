@@ -67,7 +67,7 @@ private String generateSign(String json, String secretKey) {
 查询所有交易所支持的币种
 > 请求方式：POST
 </BR>
-接口名：[/v1/coin/broker-configAsset-list](#brokerassetlistusingpost)
+> 接口名：[/v1/coin/broker-configAsset-list](#brokerassetlistusingpost)
 
 #### 2.1.2 运营商币对列表查询
 查询所有交易所支持的交易币对，根据交易币种查询币对
@@ -121,7 +121,7 @@ private String generateSign(String json, String secretKey) {
 #### 2.3.2 用户充值回调
 用户充值到账后回调运营商提供的回调地址，通知运营商充值到账
 > 请求方式：POST</br>
-> 接口名： [运营商提供的回调地址](#depositCallBack)
+> 接口名： [DepositCallBack](#depositCallBack)
 
 
 #### 2.3.3 充值记录查询
@@ -140,19 +140,19 @@ private String generateSign(String json, String secretKey) {
 #### 2.4.2 获取K线
 支持查询MasterDAX的所有K线数据。
 > 请求方式：POST</br>币对
-> 接口名： [/v1/data/kline/kline-pages](getklinepagesusingpost)
+> 接口名： [/v1/data/kline/kline-pages](#getklinepagesusingpost)
 
 
 #### 2.4.3 获取历史交易
-支持按币对查询MasterDAX的历史交易记录。
+支持按币对查询MasterDAX的成交历史交易记录。
 > 请求方式：POST</br>
-> 接口名： 缺失中
+> 接口名： [/trade/info?symbol=BTC_EOS](#gettradedendpoint)
 
 
 #### 2.4.4 24H数据查询
 支持某币对的最新成交价、24H涨跌幅、24H最高价、24H最低价、24H成交量等数据。
 > 请求方式：GET</br>
-> 接口名： [/trade/info?symbol=BTC_EOS](#gettradedendpoint)
+> 接口名： [/trade/detail](#ettradedetail)
 
 
 #### 2.4.5 用户交易挂单
@@ -229,13 +229,13 @@ private String generateSign(String json, String secretKey) {
  
 
 > 请求方式：POST</br>
-> 接口名：  /v1/withdraw/queryWithdrawTotal
+> 接口名：  [/v1/withdraw/withdraw-coin-details](#getwithdrawcoinusingpost)
 
 #### 2.5.7 用户提现回调
 用户提现到账或提现触发限额后审核失败回调通知运营商
 
 > 请求方式：POST</br>
-> 接口名： [运营商提供的回调地址](#withdrawCallBack)
+> 接口名： [WithdrawCallBack](#withdrawCallBack)
 
 
 ## 3.运营商结算接口
@@ -260,7 +260,7 @@ private String generateSign(String json, String secretKey) {
 ### 3.3 结算账户资产转出状态回调
 结算账户的资产转出申请成功后，系统会将转出的状态回调给运营商，状态有 `到账` 和 `拒绝`。
 > 请求方式：POST</br>
-> 接口名： [券商提供的回调地址](#withdrawCallBack)
+> 接口名： [WithdrawCallBack](#withdrawCallBack)
 
 
 
@@ -337,7 +337,7 @@ private String generateSign(String json, String secretKey) {
 # cloud-exchange-api
 
 <a name="paths"></a>
-## ENDPOINT
+## PUBLIC
 
 <a name="getdepthendpoint"></a>
 ### Depth
@@ -387,7 +387,7 @@ GET `/trade/trade?symbol=`symbolCode
 }
 ```
 
-
+<a name="gettradedetail"></a>
 ### 24HOURS
 ```
 GET /trade/detail
@@ -457,7 +457,7 @@ GET /trade/info?symbol=BTC_EOS
 ```
 
 <a name="paths"></a>
-## Paths
+## PRIVATE
 
 <a name="getuseraccountassetsusingpost"></a>
 ### 用户资产查询(以运营商支持且分配给用户币种列表为基础)
