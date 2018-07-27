@@ -24,12 +24,12 @@ After accessing the interface provided by the documentation, the user can order,
 
 ![云交易所接入流程](user_flow.png)
 
-![用户提现](User Withdrawal.png)
+![用户提现](User_Withdrawal.png)
 
 #### 1.2.2 Broker Settlement Process
 Once the broker’s user generates fees (trade fee and withdrawal fee) on the exchange, MasterDAX will settle the broker's fee income to the broker's account opened in MasterDAX on `T+0` days as agreed. The broker may initiate any transfer the fee income to its own address via API at its discretion. The specific process is as follows: 
 
-![运营商提现](Broker Withdrawal.png)
+![运营商提现](Broker_Withdrawal.png)
 
 ### 1.3 Request Interaction
 #### 1.3.1 URI scheme
@@ -66,9 +66,8 @@ private String generateSign(String json, String secretKey) {
 
 #### 2.1.1 Broker Coin List
 Query all the coins supported by the exchanges
-> Request method：POST
-</BR>
-Interface name：[/v1/coin/broker-configAsset-list](#brokerassetlistusingpost)
+> Request method：POST</br>
+> Interface name：[/v1/coin/broker-configAsset-list](#brokerassetlistusingpost)
 
 #### 2.1.2 Broker symbol List
 Query all the symbols supported by the exchanges
@@ -114,8 +113,8 @@ Supports querying all of the user's assets, including available balances and fro
 > Interface name： [/v1/asset/accounts](#getuseraccountassetsusingpost)
 
 
-### 2.3 User deposit
-#### 2.3.1 Get User deposit Address
+### 2.3 User Deposit
+#### 2.3.1 Get User Deposit Address
 When the user clicking on the deposit, an interface can be called to obtain the deposit address. If the user didn’t have any deposit address system before, the system will automatically assign one for him. 
 > Request method：POST</br>
 > Interface name： [/v1/coin-transfer/in-address-query](#getcointransferinaddressusingpost)
@@ -124,7 +123,7 @@ When the user clicking on the deposit, an interface can be called to obtain the 
 #### 2.3.2 User Deposit Callback
 After the user deposits his account, the callback address provided by the broker is called back to the broker for notifying that the account is deposited. 
 > Request method：POST</br>
-> Interface name： [运营商提供的回调地址](#depositCallBack)
+> Interface name： [DepositCallBack](#depositCallBack)
 
 
 #### 2.3.3 Deposit Record Query
@@ -145,45 +144,50 @@ Support for querying all depth data of MasterDAX.
 Support for querying all K-line of MasterDAX.
 
 > Request method：POST</br>Symbol
-> Interface name： [/v1/data/kline/kline-pages](getklinepagesusingpost)
+> Interface name： [/v1/data/kline/kline-pages](#getklinepagesusingpost)
 
 
-#### 2.4.3 24H Data Query
-Support the latest trade price of a certain symbol, 24H up and down, 24H highest price, 24H lowest price, 24H volume and other data.
-> Request method：GET</br>
+#### 2.4.3 GET Historical trades
+Supports for querying the historical trade records of MasterDAX by symbol
+> Request method：POST</br>
 > Interface name： [/trade/info?symbol=BTC_EOS](#gettradedendpoint)
 
+#### 2.4.4 24H Data Query
+Support the latest trade price of a certain symbol, 24H up and down, 24H highest price, 24H lowest price, 24H volume and other data.
+> Request method：GET</br>
+> Interface name： [/trade/detail](#gettradedetail)
 
-#### 2.4.4 User Trade Ordering
+
+#### 2.4.5 User Trade Ordering
 The user's order on a certain symbol is sent to MasterDAX for processing.
 > Request method：POST</br>
 > Interface name： [/v1/match/order](#matchorderusingpost)
 
 
-#### 2.4.5  User Order Cancellation
+#### 2.4.6  User Order Cancellation
 The user's order cancellation on a certain symbol is sent to MasterDAX for processing.> Request method：POST</br>
 > Interface name： [/v1/match/match-order/cancel](#cancelmatchorderusingpost)
 
 
-#### 2.4.6  User Order Status Query
+#### 2.4.7  User Order Status Query
 According to the order number, the information such as the status of the order of the user in a certain symbol is queried.
 > Request method：POST</br>
 > Interface name：  [/v1/match/order-query](#orderqueryusingpost)
 
 
-#### 2.4.7 User In-progress Order List Query
+#### 2.4.8 User In-progress Order List Query
 Query the user's order list for a symbol order with a status of `waiting` and `pending`.
 > Request method：POST</br>
 > Interface name： [/v1/match/match-order/current](#getmatchorderdetailusingpost)
 
-#### 2.4.8 User Processed Order Query
+#### 2.4.9 User Processed Order Query
 Query the user's order list for a certain symbol order with a status of `success` and `cancel`.
 
 > Request method：POST</br>
 > Interface name：  [/v1/match/match-order/history](#gethistorymatchorderusingpost)
 
 
-#### 2.4.9 Query all User's trade Records
+#### 2.4.10 Query all User's trade Records
 Query the trade orders list for all users on a symbol order.
 
 > Request method：POST</br>
@@ -191,7 +195,7 @@ Query the trade orders list for all users on a symbol order.
 
 
 ### 2.5 User Withdrawal
-#### 2.5.1 User Withdrawal Request
+#### 2.5.1 Broker User Coin Withdrawal Application
 This interface is called when the user initiates the withdrawal operation to deduct its corresponding assets.
 > Request method：POST</br>
 > Interface name：  [/v1/withdraw/withdraw-coin-user](#userwithdrawcoinusingpost)
@@ -229,7 +233,7 @@ Query the user-initiated withdrawal record, which can be queried by `UID` and `S
  
 
 > Request method：POST</br>
-> Interface name：  /v1/withdraw/queryWithdrawTotal
+> Interface name：[/v1/withdraw/withdraw-coin-details](#getwithdrawcoinusingpost)
 
 #### 2.5.7 User Withdrawal Callback
 After the user withdraws the account or withdraws the trigger limit, the audit failure callback notifies the broker.
@@ -266,7 +270,7 @@ After the successful application of transfer out of the settlement account, the 
 
 
 ### 3.4 Settlement Account Asset Withdraw  Record Query
-查询该结算账户下资产转出的记录，输入的`UID=0`时查询的是运营商的转出记录。
+Query the assets withdraw records of the settlement account. When `UID=0`, means the broker's withdraw records.
  
 
 > Request method：POST</br>
