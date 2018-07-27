@@ -65,8 +65,7 @@ private String generateSign(String json, String secretKey) {
 
 #### 2.1.1 运营商币种列表查询
 查询所有交易所支持的币种
-> 请求方式：POST
-</BR>
+> 请求方式：POST</br>
 > 接口名：[/v1/coin/broker-configAsset-list](#brokerassetlistusingpost)
 
 #### 2.1.2 运营商币对列表查询
@@ -152,7 +151,7 @@ private String generateSign(String json, String secretKey) {
 #### 2.4.4 24H数据查询
 支持某币对的最新成交价、24H涨跌幅、24H最高价、24H最低价、24H成交量等数据。
 > 请求方式：GET</br>
-> 接口名： [/trade/detail](#ettradedetail)
+> 接口名： [/trade/detail](#gettradedetail)
 
 
 #### 2.4.5 用户交易挂单
