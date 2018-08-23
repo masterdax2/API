@@ -352,8 +352,7 @@ Once the broker’s user generates fees (trade fee and withdrawal fee) on the ex
 
 ## 1.3. Request Interaction
 ### 1.3.1. URI scheme
-*Host* : ip:8080  
-*BasePath* : /api
+*Host* : https://api.masterdax.com
 
 ### 1.3.2. Instructions to Request Interaction
 1. Submittal
